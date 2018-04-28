@@ -29,16 +29,21 @@ object(this)
     let in_channel = open_in s in
     Stream.from (fun _ -> try Some (input_line in_channel) with End_of_file -> None)
 
+  (* This probably could be improved *)
   method tokenize (line : string) : string list =
     let p = Str.regexp "[.]+" in
     let e = Str.regexp "[!]+" in
     let q = Str.regexp "[?]+" in
     let c = Str.regexp "[,]+" in
+    let sq = Str.regexp "[\']+" in
+    let dq = Str.regexp "[\"]+" in
     let p_line = Str.global_replace p " ." line in
     let e_line = Str.global_replace e " !" p_line in
     let q_line = Str.global_replace q " ?" e_line in
     let c_line = Str.global_replace c " ," q_line in
-    Str.split (regexp " +") c_line
+    let sq_line = Str.global_replace sq " \' " c_line in
+    let dq_line = Str.global_replace dq " \" " sq_line in
+    Str.split (regexp " +") dq_line
 
   method get_string () : string =
     match !input_list with
@@ -64,7 +69,7 @@ object(this)
       | "\"" -> Punct s
       | "\'" -> Punct s
       | _ -> Word s
-    with Stream.Failure -> Eof
+    with Stream.Failure -> Eof (* catching the exception doesn't work here*)
 
   method token_stream () : token Stream.t =
     this#stream_map this#token_of_string (this#input_stream())
