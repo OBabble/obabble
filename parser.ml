@@ -1,6 +1,7 @@
 open Scanf;;
 open NativeLazyStreams;;
 open String;;
+open Str;;
 
 (* input token types : words, punctuation, end of sentence, and end of file *)
 type token =
@@ -15,6 +16,8 @@ object
   method get_string : unit -> string
   method input_stream : unit -> string Stream.t
   method token_stream : unit -> token Stream.t
+  method stream_map : (string -> token) -> string Stream.t -> token Stream.t
+  method token_of_string : string -> token
 end ;;
 
 
@@ -27,7 +30,16 @@ object(this)
     let in_channel = open_in s in
     Stream.from (fun _ -> try Some (input_line in_channel) with End_of_file -> None)
 
-  method tokenize (line : string) : string list = String.split_on_char ' ' line
+  method tokenize (line : string) : string list =
+    let p = Str.regexp "[.]+" in
+    let e = Str.regexp "[!]+" in
+    let q = Str.regexp "[?]+" in
+    let c = Str.regexp "[,]+" in
+    let p_line = Str.global_replace p " ." line in
+    let e_line = Str.global_replace e " !" p_line in
+    let q_line = Str.global_replace q " ?" e_line in
+    let c_line = Str.global_replace c " ," q_line in
+    Str.split (regexp " +") c_line
 
   method get_string () : string =
     match !input_list with
@@ -45,22 +57,22 @@ object(this)
 
   method token_of_string (s : string) : token =
     match s with
-    |
-    |
+    | "." -> Punct "."
+    | "," -> Punct ","
+    | "!" -> Punct "!"
+    | "?" -> Punct "?"
+    | _ -> Word s
 
   method token_stream () : token Stream.t =
-    stream_map (fun x -> ) input_stream()
+    this#stream_map this#token_of_string (this#input_stream())
 
 end;;
 
+
+(* Usage *)
 let test = new parser "test.txt";;
-let stream = test#input_stream();;
-
-open Str ;;
-
-let tokenize (line : string) : string list = Str.split (regexp "[ \t]+") (Str.global_replace (regexp "[[:punct:]]") " " line);;
-
-
+let stream = test#token_stream();;
+Stream.next stream ;;
 
 
 
