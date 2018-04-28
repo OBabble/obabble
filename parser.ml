@@ -70,9 +70,14 @@ end;;
 
 
 (* Usage *)
+
+(*
+
 let test = new parser "test.txt";;
 let stream = test#token_stream();;
 Stream.next stream ;;
+
+*)
 
 
 
