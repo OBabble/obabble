@@ -56,10 +56,10 @@ object(this)
 
   method token_of_string (s : string) : token =
     match s with
-    | "." -> Punct "."
-    | "," -> Punct ","
-    | "!" -> Punct "!"
-    | "?" -> Punct "?"
+    | "." -> Punct s
+    | "," -> Punct s
+    | "!" -> Punct s
+    | "?" -> Punct s
     | _ -> Word s
 
   method token_stream () : token Stream.t =
@@ -71,6 +71,8 @@ end;;
 (* Usage *)
 
 (*
+Detailed Usage Instructions
+
 May need to use ' #load "str.cma" ;; in interpreter'
 
 # #use "parser.ml" ;;
@@ -82,4 +84,14 @@ May need to use ' #load "str.cma" ;; in interpreter'
 *)
 
 
+(*
 
+Simplified Usage Instructions
+
+#load "str.cma" ;;
+#use "parser.ml" ;;
+let test = new parser "test.txt";;
+let stream = test#token_stream();;
+Stream.next stream ;;
+
+ *)
