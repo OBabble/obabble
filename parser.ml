@@ -60,6 +60,8 @@ object(this)
     | "!" -> End s
     | "?" -> End s
     | "," -> Punct s
+    | "\"" -> Punct s
+    | "'" -> Punct s
     | _ -> Word s
 
   method token_stream () : token Stream.t =
