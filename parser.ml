@@ -55,14 +55,16 @@ object(this)
     Stream.from next
 
   method token_of_string (s : string) : token =
-    match s with
-    | "." -> End s
-    | "!" -> End s
-    | "?" -> End s
-    | "," -> Punct s
-    | "\"" -> Punct s
-    | "'" -> Punct s
-    | _ -> Word s
+    try
+      match s with
+      | "." -> End s
+      | "!" -> End s
+      | "?" -> End s
+      | "," -> Punct s
+      | "\"" -> Punct s
+      | "\'" -> Punct s
+      | _ -> Word s
+    with Stream.Failure -> Eof
 
   method token_stream () : token Stream.t =
     this#stream_map this#token_of_string (this#input_stream())
