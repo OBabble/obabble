@@ -4,7 +4,7 @@ open Str;;
 
 (* input token types : words, punctuation, end of sentence, and end of file *)
 type token =
-  | End
+  | End of string
   | Word of string
   | Punct of string
   | Eof
@@ -56,10 +56,10 @@ object(this)
 
   method token_of_string (s : string) : token =
     match s with
-    | "." -> Punct s
+    | "." -> End s
+    | "!" -> End s
+    | "?" -> End s
     | "," -> Punct s
-    | "!" -> Punct s
-    | "?" -> Punct s
     | _ -> Word s
 
   method token_stream () : token Stream.t =
