@@ -1,5 +1,4 @@
 open Scanf;;
-open NativeLazyStreams;;
 open String;;
 open Str;;
 
@@ -43,7 +42,7 @@ object(this)
 
   method get_string () : string =
     match !input_list with
-    | [] -> input_list := tokenize (Stream.next lines); this#get_string()
+    | [] -> input_list := this#tokenize (Stream.next lines); this#get_string()
     | hd :: tl -> input_list := tl; hd
 
   method input_stream () : string Stream.t =
@@ -72,10 +71,13 @@ end;;
 (* Usage *)
 
 (*
+May need to use ' #load "str.cma" ;; in interpreter'
 
-let test = new parser "test.txt";;
-let stream = test#token_stream();;
-Stream.next stream ;;
+# #use "parser.ml" ;;
+
+# let test = new parser "test.txt";; - make new parser object from 'test.txt'
+# let stream = test#token_stream();; - makes token stream from parser object
+# Stream.next stream ;; - gives next token in token stream (repeat multiple times to get the next token in the stream)
 
 *)
 
