@@ -1,3 +1,15 @@
+(*
+
+TODO:
+
+Condense functions, hide more class methods
+improve tokenize
+Get Eof tokens working in the stream
+
+ *)
+
+
+
 open Scanf;;
 open String;;
 open Str;;
@@ -80,6 +92,7 @@ end;;
 (* Usage *)
 
 (*
+
 Detailed Usage Instructions
 
 May need to use ' #load "str.cma" ;; in interpreter'
