@@ -4,5 +4,7 @@ module type MARKOVCHAIN =
 
     val empty : unit -> mchain
     val add : mchain -> string -> string -> unit
-    val query : mchain -> string -> string option
+    val roll : mchain -> string -> string option
+    val load : string -> mchain
+    val save : mchain -> string -> unit
   end
