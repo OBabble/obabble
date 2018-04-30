@@ -5,17 +5,21 @@ We're using .txt files of the input *)
 open Parser ;;
 open Markov ;;
 
+exception WordNotFound of token
+
 module type GENERATOR =
   sig 
     val roll : mchain -> string -> string option
-    val gen : mchain -> token -> token list
+    val gen : mchain -> token -> string
   end
 
 module Generator : GENERATOR = 
   struct
-    let roll = MarkovChain.roll
-    let rec gen (m: mchain) (word: token) : token list  =
+    let roll = Markovchain.roll
+    let rec gen (m: mchain) (word: token) : string  =
       match roll m word with
-      |Some w -> w :: gen m w
-      |None -> []
+      |Some w -> (match w with 
+                 |End -> ""
+                 |_ -> w ^ " " ^ gen m w)
+      |None -> raise (WordNotFound "word")
   end
