@@ -5,14 +5,14 @@
  * Definitions and tools for working with Markov Chain objects.
  *)
 
-open Parser ;;
+open Token ;;
 
 let cENDREPR = "|END|" ;;
 
 (* Markov Chain Data Structure:
- * Each pair of keys can be used to compute a probability of traversing
- * between the two keys. The probability is computed from a occurrence
- * count in `chain` divided by the universe count in `totals`.
+ * Each pair of keys (of type token) can be used to compute a probability of 
+ * traversing between the two keys. The probability is computed from a 
+ * occurrence count in `chain` divided by the universe count in `totals`.
  * INVARIANT: All first keys in `chain` must exist in `totals`. Each value
  * in `totals` corresponds to the sum of all counts under each first-level
  * key in `chain`.
@@ -28,7 +28,9 @@ module type MARKOVCHAIN =
 
     val empty : unit -> mchain
     val add : mchain -> token -> token -> unit
+    val query : mchain -> token -> token -> (int * int) option
     val roll : mchain -> token -> token option
+    val size : mchain -> int * int
     val load : string -> mchain
     val save : mchain -> string -> unit
   end
@@ -53,6 +55,12 @@ module MarkovChain : MARKOVCHAIN =
 
     let add = add_n 1
 
+    let query (m : mchain) (t1 : token) (t2 : token) : (int * int) option =
+      try
+        Some (Hashtbl.find (Hashtbl.find m.chain t1) t2,
+          Hashtbl.find m.totals t1)
+      with Not_found -> None
+
     let roll (m : mchain) (s : token) : token option =
       match Hashtbl.find_opt m.chain s with
       | Some l -> let i = Random.int (Hashtbl.find m.totals s) in
@@ -61,6 +69,10 @@ module MarkovChain : MARKOVCHAIN =
           if i >= b && i < b + c then (b + c, w)
           else (b + c, s)) l (0, End) in Some r
       | None -> None
+
+    let size (m : mchain) : int * int =
+      (Hashtbl.length m.totals,
+        Hashtbl.fold (fun _ t acc -> acc + Hashtbl.length t) m.chain 0)
 
     let save (m : mchain) (p : string) : unit =
       let f = open_out p in
