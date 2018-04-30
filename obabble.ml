@@ -19,6 +19,13 @@ let model =
     train model (Parser.get_stream corpus);
     MarkovChain.save model model_filename; model;;
 
+(* Print glorious banner *)
+let () =
+  let banner = open_in "obabble_art.txt" in
+  try while true do
+    print_endline (input_line banner)
+  done with End_of_file -> () ;;
+
 let () =
   while true do
     try
