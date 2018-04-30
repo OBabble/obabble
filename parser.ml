@@ -19,7 +19,7 @@ module Parser : PARSER =
   struct
 
     let tokenize (s : string) : string list =
-      let p = Str.regexp "\\([\\.!?,\"\']+\\)" in
+      let p = Str.regexp "\\([\\.!?,]+\\)" in
       Str.split (regexp " +") (Str.global_replace p " \\1 " s)
 
     let input_stream (s : string Stream.t) : token Stream.t =
@@ -42,4 +42,4 @@ module Parser : PARSER =
       input_stream string_stream
   end ;;
 
-let test = Parser.get_stream "test.txt";;
+let test = Parser.get_stream "movie_lines.txt";;
