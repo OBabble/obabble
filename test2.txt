@@ -1,2 +1,2 @@
 Hi Bob.
-Hi "Cat".
+Hi "Cat."

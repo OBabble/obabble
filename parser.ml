@@ -22,9 +22,9 @@ module type PARSER =
 module Parser : PARSER =
   struct
 
-    let tokenize (line : string) : string list =
-      let p = Str.regexp "[!?,\'\"]+" in
-      Str.split (regexp " +") (Str.global_substitute p (fun s -> " "^s) line)
+    let tokenize (s : string) : string list =
+      let p = Str.regexp "\\([\\.!?,\"\']+\\)" in
+      Str.split (regexp " +") (Str.global_replace p " \\1 " s)
 
     let input_stream (s : string Stream.t) : token Stream.t =
       let l = ref None in
