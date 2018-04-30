@@ -16,8 +16,8 @@ module Generator : GENERATOR =
     let roll = Markovchain.roll
     let rec gen (m: mchain) (word: token) : string  =
       match roll m word with
-      |Some w -> match w with 
-      |End -> ""
-      |_ -> w ^ " " ^ gen m w
+      |Some w -> (match w with 
+                 |End -> ""
+                 |_ -> w ^ " " ^ gen m w)
       |None -> []
   end
