@@ -19,5 +19,5 @@ module Generator : GENERATOR =
       |Some w -> (match w with 
                  |End -> ""
                  |_ -> w ^ " " ^ gen m w)
-      |None -> []
+      |None -> raise (WordNotFound "word")
   end
