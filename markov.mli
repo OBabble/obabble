@@ -3,8 +3,8 @@ module type MARKOVCHAIN =
     type mchain
 
     val empty : unit -> mchain
-    val add : mchain -> string -> string -> unit
-    val roll : mchain -> string -> string option
+    val add : mchain -> token -> token -> unit
+    val roll : mchain -> token -> token option
     val load : string -> mchain
     val save : mchain -> string -> unit
   end
