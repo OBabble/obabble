@@ -16,7 +16,7 @@ type token =
 
 module type PARSER =
   sig
-    val init : string -> token Stream.t
+    val get_stream : string -> token Stream.t
   end ;;
 
 module Parser : PARSER =
@@ -47,10 +47,10 @@ module Parser : PARSER =
       in
       Stream.from (fun _ -> Some (get_string s))
 
-    let init (s : string) : token Stream.t =
+    let get_stream (s : string) : token Stream.t =
       let in_channel = open_in s in
       let string_stream = Stream.from (fun _ -> try Some (input_line in_channel) with End_of_file -> None) in
       input_stream string_stream
   end ;;
 
-let test = Parser.init "test2.txt";;
+let test = Parser.get_stream "test2.txt";;
