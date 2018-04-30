@@ -5,15 +5,26 @@
  * Definitions and tools for working with Markov Chain objects.
  *)
 
-type token = 
-  | Word of string
-  | End ;;
+open Parser ;;
 
 let cENDREPR = "|END|" ;;
 
+(* Markov Chain Data Structure:
+ * Each pair of keys can be used to compute a probability of traversing
+ * between the two keys. The probability is computed from a occurrence
+ * count in `chain` divided by the universe count in `totals`.
+ * INVARIANT: All first keys in `chain` must exist in `totals`. Each value
+ * in `totals` corresponds to the sum of all counts under each first-level
+ * key in `chain`.
+ *)
+type mchain = {
+  chain : (token, (token, int) Hashtbl.t) Hashtbl.t;
+  totals : (token, int) Hashtbl.t
+}
+
 module type MARKOVCHAIN =
   sig
-    type mchain
+    exception BadChain of string
 
     val empty : unit -> mchain
     val add : mchain -> token -> token -> unit
@@ -23,21 +34,7 @@ module type MARKOVCHAIN =
   end
 
 module MarkovChain : MARKOVCHAIN =
-  struct
-    
-    (* Markov Chain Data Structure:
-     * Each pair of keys can be used to compute a probability of traversing
-     * between the two keys. The probability is computed from a occurrence
-     * count in `chain` divided by the universe count in `totals`.
-     * INVARIANT: All first keys in `chain` must exist in `totals`. Each value
-     * in `totals` corresponds to the sum of all counts under each first-level
-     * key in `chain`.
-     *)
-    type mchain = {
-      chain : (token, (token, int) Hashtbl.t) Hashtbl.t;
-      totals : (token, int) Hashtbl.t
-    }
-
+  struct    
     exception BadChain of string
     
     let empty () : mchain = {chain = Hashtbl.create 0; totals = Hashtbl.create 0}

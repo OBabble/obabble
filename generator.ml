@@ -2,6 +2,9 @@
 
 We're using .txt files of the input *)
 
+open Parser ;;
+open Markov ;;
+
 module type GENERATOR =
   sig 
     val roll : mchain -> string -> string option
@@ -10,7 +13,7 @@ module type GENERATOR =
 
 module Generator : GENERATOR = 
   struct
-    let roll = Markovchain.roll
+    let roll = MarkovChain.roll
     let rec gen (m: mchain) (word: token) : token list  =
       match roll m word with
       |Some w -> w :: gen m w
