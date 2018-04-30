@@ -15,7 +15,7 @@ module type GENERATOR =
 module Generator : GENERATOR = 
   struct
     exception WordNotFound of token
-    let roll = Markovchain.roll
+    let roll = Markov.roll
     let rec gen (m: mchain) (word: token) : string  =
 	match roll m word with
 	|Some w -> (match w with 
