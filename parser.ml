@@ -20,7 +20,7 @@ module Parser : PARSER =
 
     let tokenize (s : string) : string list =
       let p = Str.regexp "\\([\\.!?,]+\\)" in
-      Str.split (regexp " +") (Str.global_replace p " \\1 " s)
+      Str.split (regexp "\s+") (Str.global_replace p " \\1 " s)
 
     let input_stream (s : string Stream.t) : token Stream.t =
       let l = ref None in
