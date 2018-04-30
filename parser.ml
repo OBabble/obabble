@@ -23,19 +23,8 @@ module Parser : PARSER =
   struct
 
     let tokenize (line : string) : string list =
-      let p = Str.regexp "[.]+" in
-      let e = Str.regexp "[!]+" in
-      let q = Str.regexp "[?]+" in
-      let c = Str.regexp "[,]+" in
-      let sq = Str.regexp "[\']+" in
-      let dq = Str.regexp "[\"]+" in
-      let p_line = Str.global_replace p " ." line in
-      let e_line = Str.global_replace e " !" p_line in
-      let q_line = Str.global_replace q " ?" e_line in
-      let c_line = Str.global_replace c " ," q_line in
-      let sq_line = Str.global_replace sq " \' " c_line in
-      let dq_line = Str.global_replace dq " \" " sq_line in
-      Str.split (regexp " +") dq_line
+      let p = Str.regexp "[!?,\'\"]+" in
+      Str.split (regexp " +") (Str.global_substitute p (fun s -> " "^s) line)
 
     let input_stream (s : string Stream.t) : token Stream.t =
       let l = ref None in
@@ -49,7 +38,11 @@ module Parser : PARSER =
 
     let get_stream (s : string) : token Stream.t =
       let in_channel = open_in s in
-      let string_stream = Stream.from (fun _ -> try Some (input_line in_channel) with End_of_file -> None) in
+      let string_stream = Stream.from (fun _ -> try
+                                                  Some (input_line in_channel)
+                                                with
+                                                  End_of_file -> None)
+      in
       input_stream string_stream
   end ;;
 
