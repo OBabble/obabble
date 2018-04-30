@@ -2,8 +2,6 @@
 
 TODO:
 
-improve tokenize
-
  *)
 
 open Scanf;;
