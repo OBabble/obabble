@@ -2,9 +2,7 @@ open Scanf ;;
 open String ;;
 open Str ;;
 
-type token =
-  | End
-  | Word of string ;;
+open Token ;;
 
 module type PARSER =
   sig
