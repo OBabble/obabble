@@ -8,3 +8,5 @@ module type PARSER =
   sig
     val get_stream : string -> token Stream.t
   end ;;
+
+module Parser : PARSER ;;

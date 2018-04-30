@@ -76,43 +76,67 @@ module MarkovChain : MARKOVCHAIN =
 
     let save (m : mchain) (p : string) : unit =
       let f = open_out p in
-      let write_token (t : token) (n : int) (cb : string -> unit): unit =
+      let write_token (t : token) 
+                      (n : int) 
+                      (l : int)
+                      (cb : string -> unit) : unit =
+        if l = 1 then Printf.fprintf f "--|"; (* Print tab for formatting *)
         match t with
         | End -> Printf.fprintf f "%s %d\n" cENDREPR n
         | Word s -> Printf.fprintf f "%s %d\n" s n; cb s in
       Hashtbl.iter (fun t1 c -> 
-        write_token t1 c (fun s ->
+        write_token t1 c 0 (fun s ->
           match Hashtbl.find_opt m.chain t1 with
           | None -> close_out f; 
             raise (BadChain ("Missing chain entry for " ^ s))
           | Some h -> Hashtbl.iter 
-            (fun t2 c -> write_token t2 c (fun _ -> ()))  h)) m.totals;
+            (fun t2 c -> write_token t2 c 1 (fun _ -> ()))  h)) m.totals;
       close_out f
 
+    (* TODO: CLEAN UP THIS CODE! *)
     let load (p : string) : mchain =
       let m = empty () in
       let f = open_in p in
+      let line = ref 0 in
       let read = ref 0 in
       let expected = ref 0 in
-      let parse_line (s : string) (n : int) : token * int =
-        if s = cENDREPR then End, n
-        else Word s, n in
+      let parse_line (s : string) (l : int) : token * int =
+        let process = (fun s n ->
+            if s = cENDREPR then End, n
+            else Word s, n) in
+        try
+          (* TODO: Yuck *)
+          if l = 1 then Scanf.sscanf s "--|%s %d" process
+          else Scanf.sscanf s "%s %d" process
+        with
+        | Scanf.Scan_failure e -> print_endline s; Printf.printf ">>%d %d\n%!" l
+        !line;
+            failwith e
+
+        | End_of_file ->          raise (BadChain 
+            (Printf.sprintf "Improper format at line %d" !line))
+      in
       try
         let rec scan_total () : unit =
-          let l = input_line f in
-          let t1, n = Scanf.sscanf l "%s %d" parse_line in
+          let s = input_line f in
+          line := !line + 1;
+          let t1, n = parse_line s 0 in
           expected := !expected + n;
           let rec scan_entries (i : int) : unit =
-            if i > 0 then let l = input_line f in
-              let t2, c = Scanf.sscanf l "%s %d\n" parse_line in
-              add_n c m t1 t2;
-              read := !read + c;
-              scan_entries (i-c)
+            if i > 0 then (let s = input_line f in
+              line := !line + 1;
+                let t2, c = parse_line s 1 in
+                add_n c m t1 t2;
+                read := !read + c;
+                scan_entries (i-c)
+                )
             else if i < 0 then
               let e = (match t1 with 
                        | Word s -> s
                        | End -> cENDREPR) in
-              raise (BadChain ("Read more than expected for token " ^ e))
+              raise (BadChain 
+                (Printf.sprintf 
+                  "Read more than expected for token %s at line %d" e !line))
             in
           scan_entries n;
           scan_total () in
