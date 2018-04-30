@@ -8,18 +8,18 @@ open Token ;;
 
 module type GENERATOR =
   sig 
-    val roll : mchain -> token -> token option
+    exception WordNotFound of token
     val gen : mchain -> token -> string
   end
 
 module Generator : GENERATOR = 
   struct
     exception WordNotFound of token
-    let roll = Markovchain.roll
+    let roll = MarkovChain.roll
     let rec gen (m: mchain) (word: token) : string  =
-	match roll m word with
-	|Some w -> (match w with 
-		    |End -> ""
-		    |_ -> w ^ " " ^ gen m w)
-	|None -> raise (WordNotFound (word))
+      match roll m word with
+      |Some w -> (match w with 
+            |End -> ""
+            | Word s -> s ^ " " ^ gen m w)
+      |None -> raise (WordNotFound (word))
   end
