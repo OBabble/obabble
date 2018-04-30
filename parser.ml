@@ -46,4 +46,4 @@ module Parser : PARSER =
       input_stream string_stream
   end ;;
 
-let test = Parser.get_stream "test2.txt";;
+let test = Parser.get_stream "test.txt";;
