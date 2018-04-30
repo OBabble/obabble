@@ -5,6 +5,8 @@ We're using .txt files of the input *)
 open Parser ;;
 open Markov ;;
 
+exception WordNotFound of token
+
 module type GENERATOR =
   sig 
     val roll : mchain -> string -> string option
