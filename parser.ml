@@ -1,9 +1,3 @@
-(*
-
-TODO:
-
- *)
-
 open Scanf;;
 open String;;
 open Str;;
@@ -26,7 +20,8 @@ module Parser : PARSER =
       let l = ref None in
       let rec get_string (s : string Stream.t) : token =
         (match !l with
-         | None -> l := Some (tokenize (Stream.next s)); get_string s
+         | None -> l := Some (tokenize (lowercase_ascii (Stream.next s)));
+                        get_string s
          | Some [] -> l:= None; End
          | Some (hd :: tl) -> l := Some tl; Word hd)
       in
