@@ -1,9 +1,3 @@
-(*
-
-TODO:
-
- *)
-
 open Scanf;;
 open String;;
 open Str;;
@@ -28,7 +22,7 @@ module Parser : PARSER =
         (match !l with
          | None -> l := Some (tokenize (Stream.next s)); get_string s
          | Some [] -> l:= None; End
-         | Some (hd :: tl) -> l := Some tl; Word hd)
+         | Some (hd :: tl) -> l := Some tl; Word (lowercase_ascii hd))
       in
       Stream.from (fun _ -> Some (get_string s))
 
