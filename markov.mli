@@ -11,9 +11,9 @@ module type MARKOVCHAIN =
 
     val empty : unit -> mchain
     val add : mchain -> token -> token -> unit
+    val token_list : mchain -> token -> token list
+    val token_totals : mchain -> token -> int
     val query : mchain -> token -> token -> (int * int) option
-    val enumerate : mchain -> token -> ((token * int) list * int)
-    val dump : mchain -> (token * ((token * int) list * int)) list
     val roll : mchain -> token -> token option
     val size : mchain -> int * int
     val load : string -> mchain
