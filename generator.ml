@@ -32,6 +32,6 @@ module Generator : GENERATOR =
       
     let rec repeat (m: mchain) (word: token) : token list list =  
     	let reps = reps + 1 in
-        if reps <= 10 then gen m word :: repeat m word
-	else gen m word :: []
+          if reps <= 10 then gen m word :: repeat m word
+	  else gen m word :: []
   end
