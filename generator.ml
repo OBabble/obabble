@@ -15,7 +15,9 @@ module type GENERATOR =
 module Generator : GENERATOR =
   struct
     exception WordNotFound of token
+    
     let roll = MarkovChain.roll
+    
     let rec gen (m: mchain) (word: token) : token list  =
       match roll m word with
       |Some w -> (match w with
@@ -25,6 +27,7 @@ module Generator : GENERATOR =
       
     let scorer (m : mchain) (query : token list) (answer : token list) : float =
       let string_list = List.map token_to_string l in
+      
     let rec repeat (m: mchain) (word: token) : token list list =  
     	let i = i + 1 in
         if i <= 10 then gen m word :: repeat m word
