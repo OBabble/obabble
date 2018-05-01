@@ -34,7 +34,7 @@ let score (m : mchain) (q : token list) (ans : token list list)
   List.map (score_answer q) ans ;;
 
 let stop_filter (t : token list) (stop : token list) : token list =
-  List.filter (fun x -> not List.mem x stop) t ;;
+  List.filter (fun x -> not (List.mem x stop)) t ;;
 
 let rec roll_n (n : int) (m : mchain) (t : token) : token list =
   if n > 0 then match MarkovChain.roll m t with
