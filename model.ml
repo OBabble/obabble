@@ -16,7 +16,7 @@ class type model_class_t =
     method depth : int
     method train : int -> token Stream.t -> unit
     method save : string -> unit
-    method load : string -> unit
+    method load : string -> bool
     method assocs : mchain
     method chains : mchain
   end ;;
@@ -59,9 +59,10 @@ class model (name : string) (depth : int) : model_class_t =
       MarkovChain.save model.assocs (n ^ ".oma");
       MarkovChain.save model.chains (n ^ ".omc") 
 
-    method load (n : string) : unit =
-      model <- {assocs = MarkovChain.load (n ^ ".oma");
-       chains = MarkovChain.load (n ^ ".omc")}
+    method load (n : string) : bool =
+      try model <- {assocs = MarkovChain.load (n ^ ".oma");
+         chains = MarkovChain.load (n ^ ".omc")}; true
+      with Sys_error _ -> false
 
     method assocs = model.assocs
     method chains = model.chains

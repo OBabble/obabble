@@ -2,30 +2,35 @@
 (* Copyright (c) 2018 The OBabble Team *)
 
 open Token ;;
-open Parser ;;
 open Markov ;;
-open Generator ;;
 
 let corpus = "movie_lines.txt" ;;
-let model_filename = "movie_lines.mc" ;;
+let model_name = "movie_lines" ;;
 
-let model =
-  if Sys.file_exists model_filename then
-    (print_endline"Loading from file...";
-    MarkovChain.load model_filename)
-  else let model = Learner.empty () in
-    print_endline "Training new model...";
-    train model (Parser.get_stream corpus);
-    MarkovChain.save model model_filename; model;;
+let model = new Model.model model_name 1 ;;
+
+(* Initialize model *)
+let () =
+  print_string "Loading from saved model...";
+  if not (model#load model_name) then
+    (print_string "Save not found.";
+     print_endline "Training new model...";
+     model#train 1000000 (Parser.get_stream corpus);
+     model#save model_name)
+  else print_endline "Done!"
 
 (* Print glorious banner *)
 let () =
+  print_endline "\n\nWelcome to...";
   let banner = open_in "obabble_art.txt" in
-  try while true do
+  (try while true do
     print_endline (input_line banner)
-  done with End_of_file -> () ;;
+  done with End_of_file -> ());
+  print_endline "\n" ;;
+
 
 let () =
+  print_endline "Begin a conversation:";
   while true do
     try
       print_string "|: ";
@@ -33,8 +38,7 @@ let () =
       print_string "|> ";
       (* print_endline (seed ^ " " ^ (Generator.gen model
                                   (Parser.get_user_token_list seed))) *)
-      print_endline (seed ^ " " ^ (Generator.gen model
+      print_endline (seed ^ " " ^ (Generator.gen model.chains
                                   (Word seed)))
     with Generator.WordNotFound _ -> print_endline "..."
   done ;;
-

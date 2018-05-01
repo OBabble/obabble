@@ -22,16 +22,15 @@ type mchain = {
   totals : (token, int) Hashtbl.t
 }
 
-
 module type MARKOVCHAIN =
   sig
     exception BadChain of string
 
     val empty : unit -> mchain
     val add : mchain -> token -> token -> unit
+    val token_list : mchain -> token -> token list
+    val token_totals : mchain -> token -> int
     val query : mchain -> token -> token -> (int * int) option
-    val enumerate : mchain -> token -> ((token * int) list * int)
-    val dump : mchain -> (token * ((token * int) list * int)) list
     val roll : mchain -> token -> token option
     val size : mchain -> int * int
     val load : string -> mchain
@@ -58,24 +57,30 @@ module MarkovChain : MARKOVCHAIN =
 
     let add = add_n 1
 
+    let token_list (m : mchain) (t : token) : token list =
+      Hashtbl.fold (fun t _ acc -> t :: acc) (Hashtbl.find m.chain t) []
+
+    let token_totals (m : mchain) (t : token) : int =
+      Hashtbl.find m.totals t
+
     let query (m : mchain) (t1 : token) (t2 : token) : (int * int) option =
       try
         Some (Hashtbl.find (Hashtbl.find m.chain t1) t2,
-          Hashtbl.find m.totals t1)
+          token_totals m t1)
       with Not_found -> None
 
     let roll (m : mchain) (s : token) : token option =
       match Hashtbl.find_opt m.chain s with
-      | Some l -> let i = Random.int (Hashtbl.find m.totals s) in
+      | Some l -> let i = Random.int (token_totals m s) in
         let _, r = Hashtbl.fold (fun w c (b, s) ->
           (* This is guaranteed to return some result from the chain. *)
           if i >= b && i < b + c then (b + c, w)
           else (b + c, s)) l (0, End) in Some r
       | None -> None
-
+    
     let size (m : mchain) : int * int =
       (Hashtbl.length m.totals,
-        Hashtbl.fold (fun _ t acc -> acc + Hashtbl.length t) m.chain 0)
+        Hashtbl.fold (fun t _ acc -> acc + token_totals m t) m.totals 0)
 
     let save (m : mchain) (p : string) : unit =
       let f = open_out p in
@@ -95,15 +100,6 @@ module MarkovChain : MARKOVCHAIN =
           | Some h -> Hashtbl.iter 
             (fun t2 c -> write_token t2 c 1 (fun _ -> ()))  h)) m.totals;
       close_out f
-
-    let enumerate (m : mchain) (t : token) : ((token * int) list * int) =
-      match Hashtbl.find_opt m.chain t with
-      | Some h -> (Hashtbl.fold (fun t v acc -> (t, v) :: acc) h [],
-                    Hashtbl.find m.totals t)
-      | None -> ([], 0)
-
-    let dump (m : mchain) : (token * ((token * int) list * int)) list =
-      Hashtbl.fold (fun t _ acc -> (t, enumerate m t) :: acc) m.chain []
 
     (* TODO: CLEAN UP THIS CODE! *)
     let load (p : string) : mchain =
