@@ -15,7 +15,7 @@ let rec gen (m: mchain) (word: token) : token list  =
   |Some w -> (match w with
         | End -> []
         | Word s -> s :: gen m w)
-  |None -> raise (WordNotFound (word)) ;;
+  |None -> raise (WordNotFound (word))
 
 let scorer (m : mchain)
            (q : token list)
@@ -49,4 +49,4 @@ let scorer (m : mchain)
 let rec repeat (m: mchain) (word: token) : token list list =
   let reps = reps + 1 in
   if reps <= 10 then gen m word :: repeat m word
-  else gen m word :: [] ;;
+  else gen m word :: []
