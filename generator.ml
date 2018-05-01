@@ -23,7 +23,8 @@ let score (m : mchain) (q : token list) (ans : token list list)
     let t2_freq = try MarkovChain.token_totals m t2 with Not_found -> 1 in
     match MarkovChain.query m t1 t2 with
     | None -> 0.
-    | Some (n, t) -> (float n) /. (float t) /. (float t2_freq) in
+    | Some (n, t) -> Printf.printf "%d %d %d\n" n t t2_freq;
+        (float n) /. (float t) *. (float (t - t2_freq)) in
 
   let score_answer (q : token list) (ans : token list) : (token list * float) =
     let subscore = List.fold_left (fun a q_elt -> a +.

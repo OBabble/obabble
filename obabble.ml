@@ -3,7 +3,7 @@
 
 let _debug = true ;;
 
-let cMAXTRAIN = (int_of_float 1e5) ;;
+let cMAXTRAIN = (int_of_float 1e4) ;;
 let cSAMPLES = (int_of_float 1e3) ;;
 let cMAXLENGTH = 10 ;;
 
