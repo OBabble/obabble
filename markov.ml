@@ -22,6 +22,7 @@ type mchain = {
   totals : (token, int) Hashtbl.t
 }
 
+
 module type MARKOVCHAIN =
   sig
     exception BadChain of string
@@ -29,11 +30,13 @@ module type MARKOVCHAIN =
     val empty : unit -> mchain
     val add : mchain -> token -> token -> unit
     val query : mchain -> token -> token -> (int * int) option
+    val enumerate : mchain -> token -> ((token * int) list * int)
+    val dump : mchain -> (token * ((token * int) list * int)) list
     val roll : mchain -> token -> token option
     val size : mchain -> int * int
     val load : string -> mchain
     val save : mchain -> string -> unit
-  end
+  end ;;
 
 module MarkovChain : MARKOVCHAIN =
   struct    
@@ -92,6 +95,15 @@ module MarkovChain : MARKOVCHAIN =
           | Some h -> Hashtbl.iter 
             (fun t2 c -> write_token t2 c 1 (fun _ -> ()))  h)) m.totals;
       close_out f
+
+    let enumerate (m : mchain) (t : token) : ((token * int) list * int) =
+      match Hashtbl.find_opt m.chain t with
+      | Some h -> (Hashtbl.fold (fun t v acc -> (t, v) :: acc) h [],
+                    Hashtbl.find m.totals t)
+      | None -> ([], 0)
+
+    let dump (m : mchain) : (token * ((token * int) list * int)) list =
+      Hashtbl.fold (fun t _ acc -> (t, enumerate m t) :: acc) m.chain []
 
     (* TODO: CLEAN UP THIS CODE! *)
     let load (p : string) : mchain =

@@ -3,7 +3,6 @@
 
 open Token ;;
 open Parser ;;
-open Learner ;;
 open Markov ;;
 open Generator ;;
 
@@ -14,7 +13,7 @@ let model =
   if Sys.file_exists model_filename then
     (print_endline"Loading from file...";
     MarkovChain.load model_filename)
-  else let model = MarkovChain.empty () in
+  else let model = Learner.empty () in
     print_endline "Training new model...";
     train model (Parser.get_stream corpus);
     MarkovChain.save model model_filename; model;;

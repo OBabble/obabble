@@ -27,6 +27,16 @@ let () =
     assert (MarkovChain.roll m (Word "c") = None);
   done);
 
+  (* Test enumerate *)
+  assert (MarkovChain.enumerate m (Word "a") = 
+    ([(Word "b", 1); (Word "c", 1)], 2));
+  assert (MarkovChain.enumerate m (Word "b") = ([(Word "c", 1)], 1));
+
+  (* Test dump *)
+  assert (MarkovChain.dump m = [
+    (Word "b", ([(Word "c", 1)], 1));
+    (Word "a", ([(Word "b", 1); (Word "c", 1)], 2))]);
+    
   (* Test save and load *)
   if Sys.file_exists "test.mc" then Sys.remove "test.mc";
   assert (not (Sys.file_exists "test.mc"));
