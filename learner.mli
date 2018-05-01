@@ -1,6 +1,9 @@
 open Token ;;
 open Markov ;;
 
-val train : mchain -> token Stream.t -> unit
-val save : mchain -> string -> unit
-val load : string -> mchain
+type model = {assocs : mchain; chain : mchain} ;;
+
+val empty : unit -> model ;;
+val train : model -> int -> int -> token Stream.t -> unit ;;
+val save : model -> string -> unit ;;
+val load : string -> model ;;
