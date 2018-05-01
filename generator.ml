@@ -12,10 +12,10 @@ let roll = MarkovChain.roll
 
 let rec gen (m: mchain) (word: token) : token list  =
   match roll m word with
-  |Some w -> (match w with
+  | Some w -> (match w with
         | End -> []
-        | Word s -> s :: gen m w)
-  |None -> raise (WordNotFound (word))
+        | Word _ -> w :: (gen m w))
+  | None -> raise (WordNotFound (word))
 
 let scorer (m : mchain)
            (q : token list)
@@ -29,16 +29,15 @@ let scorer (m : mchain)
   let weighted_subscore (w : (int * int) option) : float =
     match w with
     | None -> 0.
-    | Some n, t -> (float n) /. (float t)
+    | Some (n, t) -> (float n) /. (float t)
   in
   let score_answer (m : mchain)
                    (q : token list)
                    (ans : token list)
                  : (token list * float) =
     let subscore = List.fold_left (fun a q_elt -> a +.
-                  (List.fold_left (fun acc a_elt -> acc +. weighted_subscore (Markov.query m q_elt a_elt))
-                                   0. ans))
-                                   0. q
+                  (List.fold_left (fun acc a_elt -> acc +. weighted_subscore
+                  (MarkovChain.query m q_elt a_elt)) 0. ans)) 0. q
     in
     (ans, subscore /. (float (List.length ans)))
   in
@@ -46,7 +45,6 @@ let scorer (m : mchain)
   List.hd score_list ;;
 
 
-let rec repeat (m: mchain) (word: token) : token list list =
-  let reps = reps + 1 in
-  if reps <= 10 then gen m word :: repeat m word
-  else gen m word :: []
+let rec repeat (m: mchain) (word: token) (n : int) : token list list =
+  if n > 0 then (gen m word) :: (repeat m word (n-1))
+  else []
