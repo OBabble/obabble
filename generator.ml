@@ -10,7 +10,9 @@ open Set ;;
 module type GENERATOR =
   sig
     exception WordNotFound of token
-    val gen : mchain -> token -> string
+    val reps : int
+    val gen : mchain -> token -> token list
+    val repeat: mchain -> token
   end
 
 module StringSet = Set.Make(String)
@@ -18,6 +20,7 @@ module StringSet = Set.Make(String)
 module Generator : GENERATOR =
   struct
     exception WordNotFound of token
+
 
     let roll = MarkovChain.roll
 
@@ -40,10 +43,4 @@ module Generator : GENERATOR =
       let score_answer (assoc : string Set)
                        (ans : token list)
                      : float =
-
-
-
-
-
-
   end
