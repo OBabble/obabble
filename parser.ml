@@ -7,20 +7,17 @@ open Token ;;
 module type PARSER =
   sig
     val get_stream : string -> token Stream.t
+    val get_user_token_list : string -> token list
   end ;;
 
 module Parser : PARSER =
   struct
 
-    let tokenize (s : string) : string list =
-      let p = Str.regexp "\\([\\.!?,]+\\)" in
-      Str.split (regexp "[ \t]+") (Str.global_replace p " \\1 " s)
-
     let input_stream (s : string Stream.t) : token Stream.t =
       let l = ref None in
       let rec get_string (s : string Stream.t) : token =
         (match !l with
-         | None -> l := Some (tokenize (lowercase_ascii (Stream.next s)));
+         | None -> l := Some (tokenize (Stream.next s));
                         get_string s
          | Some [] -> l:= None; End
          | Some (hd :: tl) -> l := Some tl; Word hd)
@@ -35,4 +32,8 @@ module Parser : PARSER =
                                                   End_of_file -> None)
       in
       input_stream string_stream
+
+    let get_user_token_list (s : string) : token list =
+      List.map (fun x -> Word x) (tokenize s)
+
   end ;;
