@@ -24,5 +24,5 @@ let token_to_string (t : token) : string =
   | End -> ""
   | Word w -> w ;;
 
-let rec token_list_to_string (t : token list) : string =
+let token_list_to_string (t : token list) : string =
   List.fold_left (fun a x -> a ^ x) "" (List.map grammarize t) ;;
