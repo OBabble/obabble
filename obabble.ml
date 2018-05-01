@@ -38,7 +38,8 @@ let () =
       print_string "|> ";
       (* print_endline (seed ^ " " ^ (Generator.gen model
                                   (Parser.get_user_token_list seed))) *)
-      print_endline (seed ^ " " ^ (Generator.gen model.chains
-                                  (Word seed)))
-    with Generator.WordNotFound _ -> print_endline "..."
+      (*print_endline (seed ^ " " ^ (Generator.gen model.chains
+                                  (Word seed))) *)
+    (* with Generator.WordNotFound _ -> print_endline "..." *)
+    with _ -> print_endline "..."
   done ;;
