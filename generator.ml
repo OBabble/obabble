@@ -22,4 +22,8 @@ module Generator : GENERATOR =
             |End -> ""
             |Word s -> s ^ " " ^ gen m w)
       |None -> raise (WordNotFound (word))
+    let scorer (m : mchain) (query : token list) (answer : token list) : float =
+      let string_list = List.map token_to_string l in
+
+
   end
