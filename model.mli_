@@ -1,0 +1,19 @@
+open Token ;;
+open Markov ;;
+
+type model_t = {assocs : mchain; chains : mchain list} ;;
+
+class type MODEL =
+  sig
+    val name
+    val depth
+    val mutable model : model_t
+
+    method train : token Stream.t -> unit
+    method save : string -> unit
+    method load : string -> unit
+    method assocs : mchain
+    method chains : mchain
+  end ;;
+
+class Model : string -> int -> MODEL ;;
