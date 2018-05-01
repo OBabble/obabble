@@ -20,6 +20,6 @@ module Generator : GENERATOR =
       match roll m word with
       |Some w -> (match w with 
             |End -> ""
-            | Word s -> s ^ " " ^ gen m w)
+            |Word s -> s ^ " " ^ gen m w)
       |None -> raise (WordNotFound (word))
   end
