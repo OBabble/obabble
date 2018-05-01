@@ -1,7 +1,6 @@
 open Scanf;;
 open String;;
 open Str;;
-
 open Token ;;
 
 module type PARSER =
@@ -25,7 +24,7 @@ module Parser : PARSER =
       Stream.from (fun _ -> Some (get_string s))
 
     let get_stream (s : string) : token Stream.t =
-      let in_channel = open_in s in
+      let in_channel = open_in s ing
       let string_stream = Stream.from (fun _ -> try
                                                   Some (input_line in_channel)
                                                 with

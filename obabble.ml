@@ -32,7 +32,8 @@ let () =
       print_string "|: ";
       let seed = read_line () in
       print_string "|> ";
-      print_endline (seed ^ " " ^ (Generator.gen model (Word seed)))
+      print_endline (seed ^ " " ^ (Generator.gen model
+                                  (Parser.get_user_token_list seed)))
     with Generator.WordNotFound _ -> print_endline "..."
   done ;;
 
