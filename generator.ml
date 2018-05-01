@@ -27,14 +27,17 @@ let score (m : mchain) (q : token list) (ans : token list list)
 
   let score_answer (q : token list) (ans : token list) : (token list * float) =
     let subscore = List.fold_left (fun a q_elt -> a +.
-                  (List.fold_left (fun acc a_elt -> 
+                  (List.fold_left (fun acc a_elt ->
                     acc +. weighted_subscore q_elt a_elt) 0. ans)) 0. q in
-    (ans, subscore /. (float (List.length ans))) in 
+    (ans, subscore /. (float (List.length ans))) in
 
-  List.map (score_answer q) ans
+  List.map (score_answer q) ans ;;
+
+let stop_filter (t : token list) (stop : token list) : token list =
+  List.filter (fun x -> not List.mem x stop) t ;;
 
 let rec roll_n (n : int) (m : mchain) (t : token) : token list =
   if n > 0 then match MarkovChain.roll m t with
   | Some e -> e :: (roll_n (n-1) m t)
   | None -> roll_n (n-1) m t
-  else []
+  else [] ;;

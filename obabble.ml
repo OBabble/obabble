@@ -13,6 +13,17 @@ open Markov ;;
 let corpus = "movie_lines.txt" ;;
 let model_name = "movie_lines" ;;
 
+let read_lines name : string list =
+  let ic = open_in name in
+  let try_read () =
+    try Some (input_line ic) with End_of_file -> None in
+  let rec loop acc = match try_read () with
+    | Some s -> loop (s :: acc)
+    | None -> close_in ic; List.rev acc in
+  loop [] ;;
+
+let cSTOPWORDS = string_list_to_token_list (read_lines "stop.txt") ;;
+
 let model = new Model.model model_name 1 ;;
 
 (* Initialize model *)
@@ -43,8 +54,8 @@ let () =
     print_string "|> ";
     try
       let seed_tokens = token_list seed in
-      let seed_pool = List.concat (List.map 
-        (Generator.roll_n cSAMPLES model#assocs) seed_tokens) in
+      let seed_pool = List.concat (List.map
+        (Generator.roll_n cSAMPLES model#assocs) (stop_filter seed_tokens)) in
       let candidates = List.map (fun s ->
         s :: (Generator.gen cMAXLENGTH model#chains s)) seed_pool in
       let scored = Generator.score model#assocs seed_tokens candidates in
@@ -52,7 +63,7 @@ let () =
         print_endline "";
         print_endline (token_list_to_string l);
         Printf.printf "-->(score %f)\n" s) scored);
-      let best, score = List.hd 
+      let best, score = List.hd
         (List.sort (fun (_, a) (_, b) -> compare b a) scored) in
       if _debug then (print_endline "\n\n\n";
       Printf.printf "(score: %f)\n" score);
