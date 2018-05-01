@@ -2,49 +2,39 @@
 
 We're using .txt files of the input *)
 
-open Parser ;;
 open Markov ;;
 open Token ;;
 
 exception WordNotFound of token
 
-let roll = MarkovChain.roll
+let roll = MarkovChain.roll ;;
 
-let rec gen (m: mchain) (word: token) : token list  =
-  match roll m word with
+let rec gen (t : int) (m: mchain) (word: token) : token list  =
+  if t <= 0 then []
+  else match roll m word with
   | Some w -> (match w with
         | End -> []
-        | Word _ -> w :: (gen m w))
-  | None -> raise (WordNotFound (word))
+        | Word _ -> w :: (gen (t-1) m w))
+  | None -> [] ;;
 
-let scorer (m : mchain)
-           (q : token list)
-           (ans : token list list)
-         : (token list * float) =
-  let compare_score (_, f1 : token list * float)
-                    (_, f2 : token list * float)
-                  : int =
-    compare f1 f2
-  in
-  let weighted_subscore (w : (int * int) option) : float =
-    match w with
+let score (m : mchain) (q : token list) (ans : token list list)
+  : (token list * float) list =
+  let weighted_subscore (t1 : token) (t2 : token) : float =
+    let t2_freq = try MarkovChain.token_totals m t2 with Not_found -> 1 in
+    match MarkovChain.query m t1 t2 with
     | None -> 0.
-    | Some (n, t) -> (float n) /. (float t)
-  in
-  let score_answer (m : mchain)
-                   (q : token list)
-                   (ans : token list)
-                 : (token list * float) =
+    | Some (n, t) -> (float n) /. (float t) /. (float t2_freq) in
+
+  let score_answer (q : token list) (ans : token list) : (token list * float) =
     let subscore = List.fold_left (fun a q_elt -> a +.
-                  (List.fold_left (fun acc a_elt -> acc +. weighted_subscore
-                  (MarkovChain.query m q_elt a_elt)) 0. ans)) 0. q
-    in
-    (ans, subscore /. (float (List.length ans)))
-  in
-  let score_list = List.sort compare_score (List.map (score_answer m q) ans) in
-  List.hd score_list ;;
+                  (List.fold_left (fun acc a_elt -> 
+                    acc +. weighted_subscore q_elt a_elt) 0. ans)) 0. q in
+    (ans, subscore /. (float (List.length ans))) in 
 
+  List.map (score_answer q) ans
 
-let rec repeat (m: mchain) (word: token) (n : int) : token list list =
-  if n > 0 then (gen m word) :: (repeat m word (n-1))
+let rec roll_n (n : int) (m : mchain) (t : token) : token list =
+  if n > 0 then match MarkovChain.roll m t with
+  | Some e -> e :: (roll_n (n-1) m t)
+  | None -> roll_n (n-1) m t
   else []

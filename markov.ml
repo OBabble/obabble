@@ -69,13 +69,16 @@ module MarkovChain : MARKOVCHAIN =
           token_totals m t1)
       with Not_found -> None
 
+    exception Found of token
+
     let roll (m : mchain) (s : token) : token option =
       match Hashtbl.find_opt m.chain s with
       | Some l -> let i = Random.int (token_totals m s) in
-        let _, r = Hashtbl.fold (fun w c (b, s) ->
+        (try let _ = Hashtbl.fold (fun w c b ->
           (* This is guaranteed to return some result from the chain. *)
-          if i >= b && i < b + c then (b + c, w)
-          else (b + c, s)) l (0, End) in Some r
+          if i >= b && i < b + c then raise (Found w)
+          else b + c) l 0 in None
+        with Found r -> Some r)
       | None -> None
     
     let size (m : mchain) : int * int =
@@ -84,6 +87,7 @@ module MarkovChain : MARKOVCHAIN =
 
     let save (m : mchain) (p : string) : unit =
       let f = open_out p in
+      let c_ex, t_ex = size m in Printf.fprintf f "%d %d\n" c_ex t_ex;
       let write_token (t : token) 
                       (n : int) 
                       (l : int)
@@ -99,13 +103,16 @@ module MarkovChain : MARKOVCHAIN =
             raise (BadChain ("Missing chain entry for " ^ s))
           | Some h -> Hashtbl.iter 
             (fun t2 c -> write_token t2 c 1 (fun _ -> ()))  h)) m.totals;
+      Printf.printf "Saved %d tokens totaling %d instances.\n" c_ex t_ex;
       close_out f
 
     (* TODO: CLEAN UP THIS CODE! *)
     let load (p : string) : mchain =
       let m = empty () in
       let f = open_in p in
+      let c_ex, _ = Scanf.sscanf (input_line f) "%d %d" (fun a b -> a, b) in
       let line = ref 0 in
+      let loaded = ref 0 in
       let read = ref 0 in
       let expected = ref 0 in
       let parse_line (s : string) (l : int) : token * int =
@@ -117,10 +124,7 @@ module MarkovChain : MARKOVCHAIN =
           if l = 1 then Scanf.sscanf s "--|%s %d" process
           else Scanf.sscanf s "%s %d" process
         with
-        | Scanf.Scan_failure e -> print_endline s; Printf.printf ">>%d %d\n%!" l
-        !line;
-            failwith e
-
+        | Scanf.Scan_failure _
         | End_of_file ->          raise (BadChain 
             (Printf.sprintf "Improper format at line %d" !line))
       in
@@ -128,6 +132,7 @@ module MarkovChain : MARKOVCHAIN =
         let rec scan_total () : unit =
           let s = input_line f in
           line := !line + 1;
+          loaded := !loaded + 1;
           let t1, n = parse_line s 0 in
           expected := !expected + n;
           let rec scan_entries (i : int) : unit =
@@ -147,6 +152,9 @@ module MarkovChain : MARKOVCHAIN =
                   "Read more than expected for token %s at line %d" e !line))
             in
           scan_entries n;
+          if !loaded mod 100 = 0 then 
+            Printf.printf "\rLoaded %d tokens (%.2f%%)   %!" !loaded
+              ((float !loaded) /. (float c_ex) *. 100.);
           scan_total () in
         scan_total (); m 
         (* TODO: This structure is weird; this m will never be

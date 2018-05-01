@@ -22,6 +22,3 @@ let get_stream (s : string) : token Stream.t =
                                               End_of_file -> None)
   in
   input_stream string_stream
-
-let get_user_token_list (s : string) : token list =
-  List.map (fun x -> Word x) (tokenize s)

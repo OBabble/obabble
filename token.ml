@@ -29,3 +29,6 @@ let token_list_to_string (t : token list) : string =
 
 let token_list_to_string_list (t : token list) : string list =
   List.map token_to_string t ;;
+
+let token_list (s : string) : token list =
+  List.map (fun x -> Word x) (tokenize s) ;;
