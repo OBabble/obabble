@@ -26,3 +26,6 @@ let token_to_string (t : token) : string =
 
 let rec token_list_to_string (t : token list) : string =
   List.fold_left (fun a x -> a ^ x) "" (List.map grammarize t) ;;
+
+let token_list_to_string_list (t : token list) : string list =
+  List.map token_to_string t ;;
