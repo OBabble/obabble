@@ -9,7 +9,9 @@ open Token ;;
 module type GENERATOR =
   sig
     exception WordNotFound of token
-    val gen : mchain -> token -> string
+    val reps : int
+    val gen : mchain -> token -> token list
+    val repeat: mchain -> token
   end
 
 module Generator : GENERATOR =
@@ -20,7 +22,7 @@ module Generator : GENERATOR =
     
     let rec gen (m: mchain) (word: token) : token list  =
       match roll m word with
-      |Some w -> (match w with
+      |Some w -> (match w with 
             |End -> []
             |s -> s :: gen m w)
       |None -> raise (WordNotFound (word))
@@ -29,7 +31,7 @@ module Generator : GENERATOR =
       let string_list = List.map token_to_string l in
       
     let rec repeat (m: mchain) (word: token) : token list list =  
-    	let i = i + 1 in
-        if i <= 10 then gen m word :: repeat m word
-	      else gen m word :: []
+    	let reps = reps + 1 in
+          if reps <= 10 then gen m word :: repeat m word
+	  else gen m word :: []
   end
