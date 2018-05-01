@@ -14,6 +14,7 @@ let rec gen (t : int) (m: mchain) (word: token) : token list  =
   else match roll m word with
   | Some w -> (match w with
         | End -> []
+        | Start
         | Word _ -> w :: (gen (t-1) m w))
   | None -> [] ;;
 

@@ -5,10 +5,9 @@ open Token ;;
 
 let input_stream (s : string Stream.t) : token Stream.t =
   let l = ref None in
-  let rec get_string (s : string Stream.t) : token =
+  let get_string (s : string Stream.t) : token =
     (match !l with
-     | None -> l := Some (tokenize (Stream.next s));
-                    get_string s
+     | None -> l := Some (tokenize (Stream.next s)); Start
      | Some [] -> l:= None; End
      | Some (hd :: tl) -> l := Some tl; Word hd)
   in

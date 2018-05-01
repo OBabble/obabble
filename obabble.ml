@@ -34,6 +34,9 @@ let () =
   done with End_of_file -> ());
   print_endline "\n" ;;
 
+let rec repeat (n : int) (t : token) : token list =
+  if n > 0 then t :: repeat (n-1) t
+  else [] ;;
 
 let () =
   print_endline "Begin a conversation:";
@@ -43,8 +46,7 @@ let () =
     print_string "|> ";
     try
       let seed_tokens = token_list seed in
-      let seed_pool = List.concat (List.map 
-        (Generator.roll_n cSAMPLES model#assocs) seed_tokens) in
+      let seed_pool = repeat cSAMPLES Start in
       let candidates = List.map (fun s ->
         s :: (Generator.gen cMAXLENGTH model#chains s)) seed_pool in
       let scored = Generator.score model#assocs seed_tokens candidates in

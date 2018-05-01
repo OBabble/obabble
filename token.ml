@@ -2,6 +2,7 @@ open Str ;;
 open String;;
 
 type token =
+  | Start
   | Word of string
   | End ;;
 
@@ -12,6 +13,7 @@ let tokenize (s : string) : string list =
 
 let grammarize (t : token) : string =
   match t with
+  | Start -> ""
   | End -> ""
   | Word "!" -> "!"
   | Word "." -> "."
@@ -21,6 +23,7 @@ let grammarize (t : token) : string =
 
 let token_to_string (t : token) : string =
   match t with
+  | Start -> ""
   | End -> ""
   | Word w -> w ;;
 

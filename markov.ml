@@ -7,6 +7,7 @@
 
 open Token ;;
 
+let cSTARTREPR = "|START|" ;;
 let cENDREPR = "|END|" ;;
 
 (* Markov Chain Data Structure:
@@ -93,9 +94,11 @@ module MarkovChain : MARKOVCHAIN =
                       (l : int)
                       (cb : string -> unit) : unit =
         if l = 1 then Printf.fprintf f "--|"; (* Print tab for formatting *)
-        match t with
-        | End -> Printf.fprintf f "%s %d\n" cENDREPR n
-        | Word s -> Printf.fprintf f "%s %d\n" s n; cb s in
+        let s = match t with
+        | End -> cENDREPR
+        | Start -> cSTARTREPR
+        | Word s -> s in
+        Printf.fprintf f "%s %d\n" s n; cb s in
       Hashtbl.iter (fun t1 c -> 
         write_token t1 c 0 (fun s ->
           match Hashtbl.find_opt m.chain t1 with
@@ -146,6 +149,7 @@ module MarkovChain : MARKOVCHAIN =
             else if i < 0 then
               let e = (match t1 with 
                        | Word s -> s
+                       | Start -> cSTARTREPR
                        | End -> cENDREPR) in
               raise (BadChain 
                 (Printf.sprintf 
