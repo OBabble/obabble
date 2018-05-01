@@ -5,7 +5,6 @@ We're using .txt files of the input *)
 open Parser ;;
 open Markov ;;
 open Token ;;
-open Set ;;
 
 exception WordNotFound of token
 
@@ -16,12 +15,38 @@ let rec gen (m: mchain) (word: token) : token list  =
   |Some w -> (match w with
         | End -> []
         | Word s -> s :: gen m w)
-  |None -> raise (WordNotFound (word))
+  |None -> raise (WordNotFound (word)) ;;
 
-let scorer (m : mchain) (query : token list) (answer : token list) : float =
-  let string_list = List.map token_to_string l in
+let scorer (m : mchain)
+           (q : token list)
+           (ans : token list list)
+         : (token list * float) =
+  let compare_score (_, f1 : token list * float)
+                    (_, f2 : token list * float)
+                  : int =
+    compare f1 f2
+  in
+  let weighted_subscore (w : (int * int) option) : float =
+    match w with
+    | None -> 0.
+    | Some n, t -> (float n) /. (float t)
+  in
+  let score_answer (m : mchain)
+                   (q : token list)
+                   (ans : token list)
+                 : (token list * float) =
+    let subscore = List.fold_left (fun a q_elt -> a +.
+                  (List.fold_left (fun acc a_elt -> acc +. weighted_subscore (Markov.query m q_elt a_elt))
+                                   0. ans))
+                                   0. q
+    in
+    (ans, subscore /. (float (List.length ans)))
+  in
+  let score_list = List.sort compare_score (List.map (score_answer m q) ans) in
+  List.hd score_list ;;
+
 
 let rec repeat (m: mchain) (word: token) : token list list =
   let reps = reps + 1 in
-      if reps <= 10 then gen m word :: repeat m word
-else gen m word :: []
+  if reps <= 10 then gen m word :: repeat m word
+  else gen m word :: [] ;;
