@@ -116,7 +116,7 @@ class model (name : string) (depth : int) : model_class_t =
           (* This is sort of TF-IDF *)
 
         let score_answer (ans : token list) : (token list * float) =
-          if List.length ans = 0 then (ans, 0.) else
+          if ans = [Start] then (ans, 0.) else
           let _, coherency = try List.fold_left (fun (t1, acc) t2 ->
             match MarkovChain.query this#chains t1 t2 with
             | Some (n, t) -> (t2, acc +. (float n) /. (float t))
@@ -126,7 +126,7 @@ class model (name : string) (depth : int) : model_class_t =
           let subscore = List.fold_left (fun a q_elt -> a +.
                         (List.fold_left (fun acc a_elt ->
                           acc +. weighted_subscore q_elt a_elt) 0. ans)) 0. q in
-          (ans, (coherency +. log subscore) /. (float (List.length ans + 1))) in
+          (ans, (coherency +. log (subscore +. 1.)) /. sqrt (float (List.length ans))) in
 
       (*    (ans, subscore /. float ((List.length ans) + 1) /. float ((List.length q)
        *    + 1)) in *)
