@@ -8,6 +8,8 @@
 open Token ;;
 open Markov ;;
 
+let cATTEMPTS = 10 ;;
+
 type model_t = {chains : mchain; assocs : mchain; iassocs : mchain}  ;;
 
 class type model_class_t =
@@ -22,6 +24,7 @@ class type model_class_t =
     method iassocs : mchain
     method query : token list -> int -> int -> float -> token list option
   end ;;
+
 
 class model (name : string) (depth : int) : model_class_t =
   object(this)
@@ -41,7 +44,7 @@ class model (name : string) (depth : int) : model_class_t =
         let t1 = Stream.next s in
           if t1 = End then acc
           else match Stream.peek s with
-               | Some t2 -> MarkovChain.add model.chains t1 t2; train_line (t1 :: acc)
+               | Some t2 -> MarkovChain.add this#chains t1 t2; train_line (t1 :: acc)
                | None -> acc in
       let train_assocs (m : mchain) (l1 : token list) (l2 : token list) =
         List.iter (fun t1 -> List.iter (fun t2 ->
@@ -51,9 +54,9 @@ class model (name : string) (depth : int) : model_class_t =
       (try while !counter < i || i < 0 do
         counter := !counter + 1;
         let line = train_line [] in
-        train_assocs model.iassocs line line;
+        train_assocs this#iassocs line line;
         (match !prev_line with
-        | Some pline -> train_assocs model.assocs pline line
+        | Some pline -> train_assocs this#assocs pline line
         | None -> ());
         prev_line := Some line;
         if !counter mod 1000 = 0 then Printf.printf "Trained %d lines...\n%!" !counter;
@@ -61,7 +64,6 @@ class model (name : string) (depth : int) : model_class_t =
       MarkovChain.bake this#chains;
       MarkovChain.bake this#assocs;
       MarkovChain.bake this#iassocs
-
 
     method save (n : string) : unit =
       Printf.printf "Saving chains...\n%!";
@@ -88,22 +90,66 @@ class model (name : string) (depth : int) : model_class_t =
     method iassocs = model.iassocs
 
     method query (s : token list) (n : int) (m : int) (t : float) : token list option =
+      let rec gen (n : int) (m: mchain) (word: token) : token list  =
+        if n <= 0 then []
+        else match MarkovChain.roll cATTEMPTS m word with
+        | Some w -> (match w with
+              | End -> []
+              | Start
+              | Word _ -> w :: (gen (n-1) m w))
+        | None -> [] in
+
       let rec repeat (n : int) (t : token) : token list =
         if n > 0 then t :: repeat (n-1) t
         else [] in
+
+
+      let score (q : token list) (ans : token list list)
+        : (token list * float) list =
+        let weighted_subscore (t1 : token) (t2 : token) : float =
+          let rev = try MarkovChain.token_totals this#assocs t2 with Not_found -> 1 in
+          match MarkovChain.query this#assocs t1 t2, MarkovChain.query this#iassocs t2 t1  with
+          | Some (n1, t1), Some (n2, t2) -> 
+              (float n1) /. (log (float t1) +. log (float rev)) +.
+              (float n2) /. log (float t2)
+          | _ -> 0. in 
+          (* This is sort of TF-IDF *)
+
+        let score_answer (ans : token list) : (token list * float) =
+          if List.length ans = 0 then (ans, 0.) else
+          let _, coherency = try List.fold_left (fun (t1, acc) t2 ->
+            match MarkovChain.query this#chains t1 t2 with
+            | Some (n, t) -> (t2, acc +. (float n) /. (float t))
+            | None -> (t2, acc)) (List.hd ans, 0.) ans
+          with Failure _ -> End, 0. in
+
+          let subscore = List.fold_left (fun a q_elt -> a +.
+                        (List.fold_left (fun acc a_elt ->
+                          acc +. weighted_subscore q_elt a_elt) 0. ans)) 0. q in
+          (ans, (coherency +. log subscore) /. (float (List.length ans + 1))) in
+
+      (*    (ans, subscore /. float ((List.length ans) + 1) /. float ((List.length q)
+       *    + 1)) in *)
+        List.map score_answer ans in
+
       let seed_pool = repeat n Start in
       let candidates = List.map (fun s ->
-        s :: (Generator.gen m this#chains s)) seed_pool in
-      let scored = Generator.score this#assocs this#iassocs s candidates in
-      (* List.iter (fun (l, s) ->
+        s :: (gen m this#chains s)) seed_pool in
+      let scored = score s candidates in
+      List.iter (fun (l, s) ->
         print_endline "";
         print_endline (token_list_to_string l);
-        Printf.printf "-->(score %f)\n" s) scored; *)
+        Printf.printf "-->(score %f)\n" s) scored;
       let best, score = List.hd 
         (List.sort (fun (_, a) (_, b) -> compare b a) scored) in
-      (* print_endline "\n\n\n";
-      Printf.printf "(score: %f)\n" score; *)
-      (* print_endline (token_list_to_string best); *)
+      print_endline "\n\n\n";
+      Printf.printf "(score: %f)\n" score;
+      print_endline ("\""^(token_list_to_string best)^"\"");
       if score > t then Some best
       else None
+
   end
+
+
+let stop_filter (t : token list) (stop : token list) : token list =
+  List.filter (fun x -> not (List.mem x stop)) t ;;
