@@ -93,7 +93,7 @@ module MarkovChain : MARKOVCHAIN =
                       (n : int) 
                       (l : int)
                       (cb : string -> unit) : unit =
-        if l = 1 then Printf.fprintf f "--|"; (* Print tab for formatting *)
+        if l = 1 then Printf.fprintf f "\t"; (* Print tab for formatting *)
         let s = match t with
         | End -> cENDREPR
         | Start -> cSTARTREPR
@@ -121,10 +121,11 @@ module MarkovChain : MARKOVCHAIN =
       let parse_line (s : string) (l : int) : token * int =
         let process = (fun s n ->
             if s = cENDREPR then End, n
+            else if s = cSTARTREPR then Start, n
             else Word s, n) in
         try
           (* TODO: Yuck *)
-          if l = 1 then Scanf.sscanf s "--|%s %d" process
+          if l = 1 then Scanf.sscanf s "\t%s %d" process
           else Scanf.sscanf s "%s %d" process
         with
         | Scanf.Scan_failure _
@@ -166,7 +167,7 @@ module MarkovChain : MARKOVCHAIN =
          * exception-handling behavior *)
       with End_of_file -> if !read <> !expected then
         raise (BadChain "EOF while expecting more chain data")
-      else m
+      else (Printf.printf "\rLoaded %d tokens (100.00%%)\n%!" !loaded; m)
   end
 
 

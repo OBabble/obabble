@@ -21,7 +21,7 @@ class chatroom : chatroom_t =
   object
     val mutable bots : Model.model list = []
     
-    method load (l : bot_spec list) : unit =
+    metho load (l : bot_spec list) : unit =
       bots <- List.map (fun s ->
         let model = new Model.model s.name 0 in
         print_string "Loading from saved model...";
