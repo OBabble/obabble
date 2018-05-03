@@ -48,7 +48,7 @@ class model (name : string) (depth : int) : model_class_t =
           MarkovChain.add m t1 t2) l2) l1 in
       let counter = ref 0 in
       let prev_line = ref None in
-      try while !counter < i || i < 0 do
+      (try while !counter < i || i < 0 do
         counter := !counter + 1;
         let line = train_line [] in
         train_assocs model.iassocs line line;
@@ -57,7 +57,11 @@ class model (name : string) (depth : int) : model_class_t =
         | None -> ());
         prev_line := Some line;
         if !counter mod 1000 = 0 then Printf.printf "Trained %d lines...\n%!" !counter;
-      done with Stream.Failure -> print_endline "Done!"
+      done with Stream.Failure -> print_endline "Done!");
+      MarkovChain.bake this#chains;
+      MarkovChain.bake this#assocs;
+      MarkovChain.bake this#iassocs
+
 
     method save (n : string) : unit =
       Printf.printf "Saving chains...\n%!";

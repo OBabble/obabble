@@ -3,11 +3,11 @@
 
 let _debug = false ;;
 
-let cMAXTRAIN = (int_of_float 1e5) ;;
-let cSAMPLES = (int_of_float 1e2) ;;
-let cMAXLENGTH = 20 ;;
-let cTHRESHOLD = 1000. ;;
-let cHISTORY = 10 ;;
+let cMAXTRAIN = (int_of_float 1e4) ;;
+let cSAMPLES = (int_of_float 1e4) ;;
+let cMAXLENGTH = 15 ;;
+let cTHRESHOLD = 0. ;;
+let cHISTORY = 20 ;;
 
 open Token ;;
 open Markov ;;
@@ -36,7 +36,7 @@ let () =
      print_endline "Training new model...";
      model#train cMAXTRAIN (Parser.get_stream corpus);
      model#save model_name)
-  else Printf.printf "Done!%!"
+  else Printf.printf "Model ready!%!"
 
 (* Print glorious banner *)
 let () =
@@ -56,14 +56,14 @@ let rec slice (n : int) (l : 'a list) : 'a list =
 
 (* Run conversation loop *)
 let () =
-  let history = ref [] in
+  (* let history = ref [] in *)
   print_endline "Begin a conversation:";
   while true do
     print_string "|: ";
     let query = token_list (read_line ()) in
-    history := slice cHISTORY (query @ !history);
+    (* history := slice cHISTORY (query @ !history); *)
     print_string "|> ";
-    (try match model#query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
+    (try match model#query query cSAMPLES cMAXLENGTH cTHRESHOLD with
     | Some response -> (* history := slice cHISTORY (query @ !history); *)
         print_endline (token_list_to_string response)
     | None -> print_endline "..."

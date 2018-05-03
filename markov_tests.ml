@@ -13,6 +13,11 @@ let () =
   assert (MarkovChain.size m = (1, 2));
   MarkovChain.add m (Word "b") (Word "c");
   assert (MarkovChain.size m = (2, 3));
+
+  (* Bake. 
+   * Bake is tested by correct rolls and token lists later on.
+   *)
+  MarkovChain.bake m;
   
   (* Test query *)
   assert (MarkovChain.query m (Word "a") (Word "b") = Some (1, 2));
@@ -22,9 +27,9 @@ let () =
 
   (* Test roll *)
   (for _ = 1 to 100 do
-    assert (MarkovChain.roll m (Word "a") <> None);
-    assert (MarkovChain.roll m (Word "b") = Some (Word "c"));
-    assert (MarkovChain.roll m (Word "c") = None);
+    assert (MarkovChain.roll 10 m (Word "a") <> None);
+    assert (MarkovChain.roll 10 m (Word "b") = Some (Word "c"));
+    assert (MarkovChain.roll 10 m (Word "c") = None);
   done);
 
   (* Test token_totals *)

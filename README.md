@@ -17,6 +17,7 @@ Note: Files that end in `.ml_` are experimental extensions that are named as suc
 TODO:
 + DONE: Unmodule things that don't need modules
 + DONE: Conversational support
+* Comment code.
 * Code cleanup, structure refactoring, and style checks.
 * Chatroom
 * Personalities, Different corpuses

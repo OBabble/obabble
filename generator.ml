@@ -5,13 +5,11 @@ We're using .txt files of the input *)
 open Markov ;;
 open Token ;;
 
-exception WordNotFound of token
-
-let roll = MarkovChain.roll ;;
+let cATTEMPTS = 100 ;;
 
 let rec gen (t : int) (m: mchain) (word: token) : token list  =
   if t <= 0 then []
-  else match roll m word with
+  else match MarkovChain.roll cATTEMPTS m word with
   | Some w -> (match w with
         | End -> []
         | Start
@@ -38,9 +36,3 @@ let score (assocs : mchain) (iassocs : mchain) (q : token list) (ans : token lis
 
 let stop_filter (t : token list) (stop : token list) : token list =
   List.filter (fun x -> not (List.mem x stop)) t ;;
-
-let rec roll_n (n : int) (m : mchain) (t : token) : token list =
-  if n > 0 then match MarkovChain.roll m t with
-  | Some e -> e :: (roll_n (n-1) m t)
-  | None -> roll_n (n-1) m t
-  else [] ;;
