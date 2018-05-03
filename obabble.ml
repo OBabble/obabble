@@ -15,6 +15,17 @@ open Markov ;;
 let corpus = "movie_lines.txt" ;;
 let model_name = "movie_lines" ;;
 
+let read_lines name : string list =
+  let ic = open_in name in
+  let try_read () =
+    try Some (input_line ic) with End_of_file -> None in
+  let rec loop acc = match try_read () with
+    | Some s -> loop (s :: acc)
+    | None -> close_in ic; List.rev acc in
+  loop [] ;;
+
+let cSTOPWORDS = string_list_to_token_list (read_lines "stop.txt") ;;
+
 let model = new Model.model model_name 1 ;;
 
 (* Initialize model *)

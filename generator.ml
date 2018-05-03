@@ -31,14 +31,16 @@ let score (assocs : mchain) (iassocs : mchain) (q : token list) (ans : token lis
 
   let score_answer (ans : token list) : (token list * float) =
     let subscore = List.fold_left (fun a q_elt -> a +.
-                  (List.fold_left (fun acc a_elt -> 
+                  (List.fold_left (fun acc a_elt ->
                     acc +. weighted_subscore q_elt a_elt) 0. ans)) 0. q in
     (ans, subscore /. sqrt (float ((List.length ans) + 1))) in 
+  List.map score_answer ans ;;
 
-  List.map score_answer ans
+let stop_filter (t : token list) (stop : token list) : token list =
+  List.filter (fun x -> not (List.mem x stop)) t ;;
 
 let rec roll_n (n : int) (m : mchain) (t : token) : token list =
   if n > 0 then match MarkovChain.roll m t with
   | Some e -> e :: (roll_n (n-1) m t)
   | None -> roll_n (n-1) m t
-  else []
+  else [] ;;
