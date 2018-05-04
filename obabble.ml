@@ -1,10 +1,12 @@
 (* O[B]abble - A Markov Chain Chatbot in Ocaml *)
 (* Copyright (c) 2018 The OBabble Team *)
 
-let _debug = false ;;
+let debug = false ;;
 
-let cMAXTRAIN = (int_of_float 1e4) ;;
-let cSAMPLES = (int_of_float 1e4) ;;
+let () = Random.self_init () ;;
+
+let cMAXTRAIN = 100000 ;;
+let cSAMPLES = 20 ;;
 let cMAXLENGTH = 15 ;;
 let cTHRESHOLD = 0. ;;
 let cHISTORY = 20 ;;
@@ -56,15 +58,16 @@ let rec slice (n : int) (l : 'a list) : 'a list =
 
 (* Run conversation loop *)
 let () =
-  (* let history = ref [] in *)
+  model#set_debug debug;
+  let history = ref [] in 
   print_endline "Begin a conversation:";
   while true do
     print_string "|: ";
     let query = string_to_token_list (read_line ()) in
-    (* history := slice cHISTORY (query @ !history); *)
+    history := slice cHISTORY (query @ !history);
     print_string "|> ";
-    (try match model#query query cSAMPLES cMAXLENGTH cTHRESHOLD with
-    | Some response -> (* history := slice cHISTORY (query @ !history); *)
+    (try match model#query query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
+    | Some response -> history := slice cHISTORY (query @ !history);
         print_endline (token_list_to_string response)
     | None -> print_endline "..."
     with Failure _ -> print_endline "...");

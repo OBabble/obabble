@@ -20,7 +20,9 @@ class type model_class_t =
     method chains : mchain
     method assocs : mchain
     method iassocs : mchain
-    method query : token list -> int -> int -> float -> token list option
+    method query : token list -> token list -> int -> int -> 
+      float -> token list option
+    method set_debug : bool -> unit
   end ;;
 
 class model (name : string) (depth : int) : model_class_t =
@@ -32,35 +34,45 @@ class model (name : string) (depth : int) : model_class_t =
       assocs = MarkovChain.empty ();
       iassocs = MarkovChain.empty ()
     }
+    val mutable debug = false
 
     method name = name
     method depth = depth
 
     (* Unexposed util *)  
     method private gen (len : int) (m: mchain) (word: token) : token list  =
-      if len <= 0 then []
+      if len <= 0 then [End]
       else match MarkovChain.roll m word with
       | Some w -> (match w with
-            | End -> []
+            | End -> [End]
             | Start
             | Word _ -> w :: (this#gen (len-1) m w))
       | None -> []
 
     (* Unexposed util *)  
     method private score (q : token list) (ans : token list list) : (token list * float) list =
-      let weighted_subscore (t1 : token) (t2 : token) : float =
-        let rev = try MarkovChain.token_totals this#assocs t2 with Not_found -> 1 in
-        match MarkovChain.query this#assocs t1 t2, MarkovChain.query this#iassocs t2 t1  with
-        | Some (n1, t1), Some (n2, t2) -> 
-            (float n1) /. (log (float t1) +. log (float rev)) +.
-            (float n2) /. log (float t2)
+      let pair_relevance (t1 : token) (t2 : token) : float =
+        match MarkovChain.query this#iassocs t1 t2, MarkovChain.query this#iassocs t2 t1  with
+        | Some (n1, t1), Some (n2, t2) ->
+            (* Sort of like TF-IDF *)
+            ((float n1) /. log (float t1) /. log (float (t2 - n2 + 1)))
         | _ -> 0. in 
-        (* This is sort of TF-IDF *)
       let score_answer (ans : token list) : (token list * float) =
-        let subscore = List.fold_left (fun a q_elt -> a +.
+        if Random.float 1. < 0.0 then (ans, 0.) (* Random dropout *) 
+        else (if debug then (print_endline ""; print_endline (token_list_to_string ans));
+        let _, raw_coherency = List.fold_left (fun (t1, acc) t2 ->
+          match MarkovChain.query this#chains t1 t2 with
+          | Some (n, t) -> (t2, acc +. ((float n) /. (log (float t) +. 1.)))
+          | None -> (t2, acc)) (List.hd ans, 0.) ans in
+        let coherency = raw_coherency /. (float (List.length ans)) in
+        let raw_relevance = List.fold_left (fun a q_elt -> a +.
                       (List.fold_left (fun acc a_elt ->
-                        acc +. weighted_subscore q_elt a_elt) 0. ans)) 0. q in
-        (ans, subscore /. sqrt (float ((List.length ans) + 1))) in 
+                        acc +. pair_relevance q_elt a_elt) 0. ans)) 0. q in
+        let relevance = raw_relevance /. log (float ((List.length q) + 2)) in
+        if debug then 
+          Printf.printf "COHERENCY: %f RELEVANCE: %f\n" coherency relevance;
+        let score = coherency *. relevance in
+        if debug then Printf.printf "FINAL SCORE: %f\n" score; (ans, score)) in
       List.map score_answer ans 
 
     (* Unexposed util *)  
@@ -120,23 +132,21 @@ class model (name : string) (depth : int) : model_class_t =
     method assocs = model.assocs
     method iassocs = model.iassocs
 
-    method query (s : token list) (n : int) (m : int) (t : float) : token list option =
+    method query (s : token list) (c : token list) 
+    (n : int) (m : int) (t : float) : token list option =
       let rec repeat (n : int) (t : token) : token list =
         if n > 0 then t :: repeat (n-1) t
         else [] in
       let seed_pool = repeat n Start in
       let candidates = List.map (fun s ->
         s :: (this#gen m this#chains s)) seed_pool in
-      let scored = this#score s candidates in
-      (* List.iter (fun (l, s) ->
-        print_endline "";
-        print_endline (token_list_to_string l);
-        Printf.printf "-->(score %f)\n" s) scored; *)
+      let scored = this#score c candidates in
       let best, score = List.hd 
         (List.sort (fun (_, a) (_, b) -> compare b a) scored) in
-      (* print_endline "\n\n\n";
-      Printf.printf "(score: %f)\n" score; *)
-      (* print_endline (token_list_to_string best); *)
+      if debug then (print_endline "\n\n\n";
+      Printf.printf "(score: %f)\n" score);
       if score > t then Some best
       else None
+
+    method set_debug (t : bool) : unit = debug <- t
   end
