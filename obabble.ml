@@ -33,7 +33,7 @@ let read_lines (filename : string) : string list =
 
 let cSTOPWORDS = string_list_to_token_list (read_lines "stop.txt") ;;
 
-let model = new Model.model model_name 1 ;;
+let model = new Model.model model_name ;;
 
 (* Initialize model *)
 let () =

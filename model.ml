@@ -13,7 +13,6 @@ type model_t = {chains : mchain; assocs : mchain; iassocs : mchain}  ;;
 class type model_class_t =
   object
     method name : string
-    method depth : int
     method train : int -> token Stream.t -> unit
     method save : string -> unit
     method load : string -> bool
@@ -25,10 +24,9 @@ class type model_class_t =
     method set_debug : bool -> unit
   end ;;
 
-class model (name : string) (depth : int) : model_class_t =
+class model (name : string) : model_class_t =
   object(this)
     val name = name
-    val depth = depth
     val mutable model : model_t = {
       chains = MarkovChain.empty ();
       assocs = MarkovChain.empty ();
@@ -37,7 +35,6 @@ class model (name : string) (depth : int) : model_class_t =
     val mutable debug = false
 
     method name = name
-    method depth = depth
 
     (* Unexposed util *)  
     method private gen (len : int) (m: mchain) (word: token) : token list  =
