@@ -5,9 +5,9 @@
  * Tools for parsing and reading in training data.
  *)
 
-open Scanf;;
-open String;;
-open Str;;
+open Scanf ;;
+open String ;;
+open Str ;;
 open Token ;;
 
 (* Given a line-by-line string stream, converts to a token stream *)
