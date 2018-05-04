@@ -15,11 +15,16 @@ open Markov ;;
 let corpus = "movie_lines.txt" ;;
 let model_name = "movie_lines" ;;
 
-let read_lines name : string list =
-  let ic = open_in name in
+let read_lines (filename : string) : string list =
+  let ic = open_in filename in
   let try_read () =
-    try Some (input_line ic) with End_of_file -> None in
-  let rec loop acc = match try_read () with
+    try
+      Some (input_line ic)
+    with
+      End_of_file -> None
+  in
+  let rec loop (acc : string list) : string list =
+    match try_read () with
     | Some s -> loop (s :: acc)
     | None -> close_in ic; List.rev acc in
   loop [] ;;
