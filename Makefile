@@ -5,7 +5,7 @@ all: $(addsuffix .byte, $(FILES))
 tests: markov_tests.byte
 
 %.byte: $(addsuffix .ml, $(FILES))
-	ocamlbuild -use-ocamlfind $@
+	ocamlbuild $@
 
 clean:
 	rm -rf _build *.byte
