@@ -1,3 +1,10 @@
+(* O[B]abble - An OCaml Chat Bot *
+ * Copyright (c) 2018 The OBabble Team
+ *
+ * Parser --
+ * Tools for parsing and reading in training data.
+ *)
+
 open Scanf;;
 open String;;
 open Str;;

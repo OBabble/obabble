@@ -48,7 +48,7 @@ let () =
   print_endline "\n" ;;
 
 (* List slice utility *)
-let rec slice (n : int) (l : 'a list) : 'a list = 
+let rec slice (n : int) (l : 'a list) : 'a list =
   if n <= 0 then []
   else match l with
   | h :: t -> h :: slice (n-1) t
@@ -60,7 +60,7 @@ let () =
   print_endline "Begin a conversation:";
   while true do
     print_string "|: ";
-    let query = token_list (read_line ()) in
+    let query = string_to_token_list (read_line ()) in
     (* history := slice cHISTORY (query @ !history); *)
     print_string "|> ";
     (try match model#query query cSAMPLES cMAXLENGTH cTHRESHOLD with
