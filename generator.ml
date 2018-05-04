@@ -8,11 +8,9 @@
 open Markov ;;
 open Token ;;
 
-let cATTEMPTS = 100 ;;
-
 let rec gen (t : int) (m: mchain) (word: token) : token list  =
   if t <= 0 then []
-  else match MarkovChain.roll cATTEMPTS m word with
+  else match MarkovChain.roll m word with
   | Some w -> (match w with
         | End -> []
         | Start

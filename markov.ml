@@ -23,7 +23,7 @@ module type MARKOVCHAIN =
     val token_list : mchain -> token -> token list
     val token_totals : mchain -> token -> int
     val query : mchain -> token -> token -> (int * int) option
-    val roll : int -> mchain -> token -> token option
+    val roll : mchain -> token -> token option
     val size : mchain -> int * int
     val load : string -> mchain
     val save : mchain -> string -> unit
@@ -34,6 +34,26 @@ module MarkovChain : MARKOVCHAIN =
     exception BadChain of string
     exception RollWithoutBake
 
+    type token_tree = 
+      | Node of ((token * int * int) * token_tree * token_tree) 
+      | Leaf
+
+    let rec tree_find (t : token_tree) (i : int) : token =
+      match t with 
+      | Node ((t, s, e), l, r) -> if i >= s && i < e then t
+                                  else if i < s then tree_find l i 
+                                  else tree_find r i
+      | Leaf -> raise Not_found 
+
+    let rec tree_build (a : (token * int * int) array) : token_tree = 
+      match a with
+      | [| |] -> Leaf
+      | [| l; r |] -> Node (l, Leaf, Node (r, Leaf, Leaf))
+      | _ -> let k = (Array.length a) / 2 in
+             Node (a.(k), 
+              tree_build (Array.sub a 0 k), 
+              tree_build (Array.sub a (k+1) (Array.length a - (k+1))))
+
     (* Markov Chain Data Structure:
      * Each pair of keys (of type token) can be used to compute a probability of 
      * traversing between the two keys. The probability is computed from a 
@@ -42,11 +62,12 @@ module MarkovChain : MARKOVCHAIN =
      * in `totals` corresponds to the sum of all counts under each first-level
      * key in `chain`.
      *)
+
     type mchain = {
       mutable baked : bool;
-      chain : (token, (token array * (token, int) Hashtbl.t)) Hashtbl.t;
+      chain : (token, (token_tree * (token, int) Hashtbl.t)) Hashtbl.t;
       totals : (token, int) Hashtbl.t
-    } ;;
+    }
     
     let empty () : mchain = {
       baked = false;
@@ -62,17 +83,20 @@ module MarkovChain : MARKOVCHAIN =
                     | None -> Hashtbl.add l s2 n)
        | None -> (let l = Hashtbl.create 0 in
          Hashtbl.add l s2 n;
-         Hashtbl.add m.chain s1 ([||], l)));
+         Hashtbl.add m.chain s1 (Leaf, l)));
       (match Hashtbl.find_opt m.totals s1 with
        | Some t -> Hashtbl.replace m.totals s1 (t + n)
        | None -> Hashtbl.add m.totals s1 n)
 
     let add = add_n 1
     
+    let augmented_token_list (m : mchain) (t : token) : (token * int * int) list =
+      let _, h = Hashtbl.find m.chain t in
+      let _, l = Hashtbl.fold 
+        (fun t c (i, l) -> (i + c, (t, i, i+c) :: l)) h (0, []) in List.rev l
+
     let token_list (m : mchain) (t : token) : token list =
-      let ts, h = Hashtbl.find m.chain t in
-      if m.baked then Array.to_list ts
-      else Hashtbl.fold (fun t _ acc -> t :: acc) h []
+      List.map (fun (t, _, _) -> t) (augmented_token_list m t)
 
     let token_totals (m : mchain) (t : token) : int =
       Hashtbl.find m.totals t
@@ -82,7 +106,8 @@ module MarkovChain : MARKOVCHAIN =
     let bake (m : mchain) : unit = 
       if not m.baked then (Printf.printf "Baking...%!"; 
         Hashtbl.iter (fun t (_, h) ->
-          Hashtbl.replace m.chain t (Array.of_list (token_list m t), h)) m.chain;
+          Hashtbl.replace m.chain t 
+            (tree_build (Array.of_list (augmented_token_list m t)), h)) m.chain;
         m.baked <- true;
         Printf.printf "Done!\n%!")
         
@@ -94,17 +119,12 @@ module MarkovChain : MARKOVCHAIN =
     (* Try to pick a word randomly for `n` attempts. If no word is chosen by
      * then, then just pick a random word.
      *)
-    let rec roll (n : int) (m : mchain) (s : token) : token option =
+    let roll (m : mchain) (s : token) : token option =
       if not m.baked then raise RollWithoutBake
-      else try let ts, h = Hashtbl.find m.chain s in         
-        let i = Random.int (Array.length ts) in
-        if n <= 0 then Some ts.(i)
-        else let p = Hashtbl.find h ts.(i) in
-        if Random.int (Hashtbl.find m.totals s) < p then Some ts.(i)
-        else roll (n-1) m s
-      with 
-      | Invalid_argument _
-      | Not_found -> None
+      else try let tt, _ = Hashtbl.find m.chain s in         
+        let i = Random.int (token_totals m s) in
+        Some (tree_find tt i)
+      with Not_found -> None
     
     let size (m : mchain) : int * int =
       (Hashtbl.length m.totals,
