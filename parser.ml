@@ -10,19 +10,12 @@ open String ;;
 open Str ;;
 open Token ;;
 
-(* Given a line-by-line string stream, converts to a token stream *)
-let input_stream (s : string Stream.t) : token Stream.t =
-  let l = ref None in
-  let get_string (s : string Stream.t) : token =
-    (match !l with
-     | None -> l := Some (tokenize (Stream.next s)); Start
-     | Some [] -> l:= None; End
-     | Some (hd :: tl) -> l := Some tl; Word hd)
-  in
-  Stream.from (fun _ -> Some (get_string s)) ;;
+(* Given a line-by-line string stream, converts to a token list stream *)
+let input_stream (s : string Stream.t) : token list Stream.t =
+  Stream.from (fun _ -> Some (string_to_token_list (Stream.next s))) ;;
 
 (* Obtains a line-by-line string stream from input file *)
-let get_stream (filename : string) : token Stream.t =
+let get_stream (filename : string) : token list Stream.t =
   let in_channel = open_in filename in
   let string_stream = Stream.from (fun _ -> try
                                               Some (input_line in_channel)
