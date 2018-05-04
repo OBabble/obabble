@@ -36,6 +36,39 @@ class model (name : string) (depth : int) : model_class_t =
     method name = name
     method depth = depth
 
+    (* Unexposed util *)  
+    method private gen (len : int) (m: mchain) (word: token) : token list  =
+      if len <= 0 then []
+      else match MarkovChain.roll m word with
+      | Some w -> (match w with
+            | End -> []
+            | Start
+            | Word _ -> w :: (this#gen (len-1) m w))
+      | None -> []
+
+    (* Unexposed util *)  
+    method private score (q : token list) (ans : token list list) : (token list * float) list =
+      let weighted_subscore (t1 : token) (t2 : token) : float =
+        let rev = try MarkovChain.token_totals this#assocs t2 with Not_found -> 1 in
+        match MarkovChain.query this#assocs t1 t2, MarkovChain.query this#iassocs t2 t1  with
+        | Some (n1, t1), Some (n2, t2) -> 
+            (float n1) /. (log (float t1) +. log (float rev)) +.
+            (float n2) /. log (float t2)
+        | _ -> 0. in 
+        (* This is sort of TF-IDF *)
+      let score_answer (ans : token list) : (token list * float) =
+        let subscore = List.fold_left (fun a q_elt -> a +.
+                      (List.fold_left (fun acc a_elt ->
+                        acc +. weighted_subscore q_elt a_elt) 0. ans)) 0. q in
+        (ans, subscore /. sqrt (float ((List.length ans) + 1))) in 
+      List.map score_answer ans 
+
+    (* Unexposed util *)  
+    method private stop_filter (t : token list) (stop : token list) : token list =
+      List.filter (fun x -> not (List.mem x stop)) t
+
+    (*method profanity_filter *)
+
     method train (i : int) (s : token Stream.t) : unit =
       let rec train_line (acc : token list) : token list =
         let t1 = Stream.next s in
@@ -93,8 +126,8 @@ class model (name : string) (depth : int) : model_class_t =
         else [] in
       let seed_pool = repeat n Start in
       let candidates = List.map (fun s ->
-        s :: (Generator.gen m this#chains s)) seed_pool in
-      let scored = Generator.score this#assocs this#iassocs s candidates in
+        s :: (this#gen m this#chains s)) seed_pool in
+      let scored = this#score s candidates in
       (* List.iter (fun (l, s) ->
         print_endline "";
         print_endline (token_list_to_string l);
