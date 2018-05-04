@@ -5,7 +5,7 @@ let debug = false ;;
 
 let () = Random.self_init () ;;
 
-let cMAXTRAIN = 100000 ;;
+let cMAXTRAIN = 10000 ;;
 let cSAMPLES = 20 ;;
 let cMAXLENGTH = 15 ;;
 let cTHRESHOLD = 0. ;;

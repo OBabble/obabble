@@ -9,3 +9,6 @@ tests: markov_tests.byte
 
 clean:
 	rm -rf _build *.byte
+
+purge: clean
+	rm ./*.om*
