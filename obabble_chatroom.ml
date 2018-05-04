@@ -8,7 +8,7 @@ let () = Random.self_init () ;;
 let cMAXTRAIN = 1000 ;;
 let cSAMPLES = 20 ;;
 let cMAXLENGTH = 15 ;;
-let cTHRESHOLD = 0. ;;
+let cTHRESHOLD = 10. ;;
 let cHISTORY = 20 ;;
 
 open Token ;;
@@ -59,30 +59,43 @@ let () =
   done with End_of_file -> ());
   print_endline "\n" ;;
 
+let babble_bot (bot, query, history, f, m : 
+  Model.model * token list ref * token list ref * out_channel * Mutex.t): unit =
+  while true do
+    Thread.delay (Random.float 10.0);
+    Mutex.lock m;
+    (try match bot#query !query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
+    | Some response -> 
+        history := slice cHISTORY (!query @ !history);
+        query := response;
+        Printf.fprintf f "|%s|> %s\n%!" bot#name (token_list_to_string response);
+    | None -> ()
+    with Failure e -> Printf.fprintf f "|%s|> Error: Failure%s\n%!" bot#name e);
+    Mutex.unlock m;
+  done ;;
+
 (* Run conversation loop *)
 let () =
   let query = ref [] in
   let history = ref [] in 
-  print_endline "Begin a conversation:";
+  let mutex = Mutex.create () in
+  let output = open_out "output.txt" in
+  
+  List.iter (fun b ->
+    ignore (Thread.create babble_bot (b, query, history, output, mutex)))  
+  bots;
+
+  print_endline "Open `tail -f output.txt` to see the conversation!";
+  print_endline "Begin by giving input here:";
   while true do
     print_string "|: ";
-    query := string_to_token_list (read_line ());
-    history := slice cHISTORY (!query @ !history);
-    
-    print_endline "";
-
-    while Random.float 1.0 > 0.18 do
-      Thread.delay (Random.float 1.8);
-      let bot = bots_array.(Random.int (Array.length bots_array)) in
-      Printf.printf "|%s|> %!" bot#name;
-      (try match bot#query !query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
-      | Some response -> 
-          history := slice cHISTORY (!query @ !history);
-          query := response;
-          print_endline (token_list_to_string response);
-      | None -> print_endline "..."
-      with Failure _ -> print_endline "...");
-    done;
-    print_endline "";
+    let line = read_line () in
+    Mutex.lock mutex;
+    Printf.fprintf output "|YOU|> %s\n%!" line;
+    let split = string_to_token_list line in
+    if List.length split > 0 then
+      (query := split;
+      history := split);
+    Mutex.unlock mutex;
   done ;;
 

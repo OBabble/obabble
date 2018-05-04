@@ -1,3 +1,4 @@
 *.byte
 *.om*
 _build/
+output.txt
