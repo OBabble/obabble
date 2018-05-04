@@ -29,4 +29,4 @@ let get_stream (filename : string) : token Stream.t =
                                             with
                                               End_of_file -> None)
   in
-  input_stream string_stream;;
+  input_stream string_stream ;;
