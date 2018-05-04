@@ -59,6 +59,20 @@ let () =
   done with End_of_file -> ());
   print_endline "\n" ;;
 
+let babble (q : token list ref) =
+    while Random.float 1.0 > 0.18 do
+      Thread.delay (Random.float 1.8);
+      let bot = bots_array.(Random.int (Array.length bots_array)) in
+      Printf.printf "|%s|> %!" bot#name;
+      (try match bot#query !query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
+      | Some response -> 
+          history := slice cHISTORY (!query @ !history);
+          query := response;
+          print_endline (token_list_to_string response);
+      | None -> print_endline "..."
+      with Failure _ -> print_endline "...");
+    done;
+
 (* Run conversation loop *)
 let () =
   let query = ref [] in
@@ -70,18 +84,8 @@ let () =
     history := slice cHISTORY (!query @ !history);
     
     print_endline "";
-    while Random.float 1.0 > 0.18 do
-      Thread.delay (Random.float 2.0);
-      let bot = bots_array.(Random.int (Array.length bots_array)) in
-      Printf.printf "|%s|> %!" bot#name;
-      (try match bot#query !query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
-      | Some response -> 
-          history := slice cHISTORY (!query @ !history);
-          query := response;
-          print_endline (token_list_to_string response);
-      | None -> print_endline "..."
-      with Failure _ -> print_endline "...");
-    done;
+
+    babble query;
     print_endline "";
   done ;;
 
