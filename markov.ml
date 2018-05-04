@@ -93,7 +93,7 @@ module MarkovChain : MARKOVCHAIN =
     let augmented_token_list (m : mchain) (t : token) : (token * int * int) list =
       let _, h = Hashtbl.find m.chain t in
       let _, l = Hashtbl.fold 
-        (fun t c (i, l) -> (i + c, (t, i, i+c) :: l)) h (0, []) in l
+        (fun t c (i, l) -> (i + c, (t, i, i+c) :: l)) h (0, []) in List.rev l
 
     let token_list (m : mchain) (t : token) : token list =
       List.map (fun (t, _, _) -> t) (augmented_token_list m t)
