@@ -27,9 +27,9 @@ let () =
 
   (* Test roll *)
   (for _ = 1 to 100 do
-    assert (MarkovChain.roll 10 m (Word "a") <> None);
-    assert (MarkovChain.roll 10 m (Word "b") = Some (Word "c"));
-    assert (MarkovChain.roll 10 m (Word "c") = None);
+    assert (MarkovChain.roll m (Word "a") <> None);
+    assert (MarkovChain.roll m (Word "b") = Some (Word "c"));
+    assert (MarkovChain.roll m (Word "c") = None);
   done);
 
   (* Test token_totals *)
@@ -37,7 +37,7 @@ let () =
   assert (MarkovChain.token_totals m (Word "b") = 1);
 
   (* Test token_list *)
-  assert (MarkovChain.token_list m (Word "a") = [(Word "b") ; (Word "c")]);
+  assert (MarkovChain.token_list m (Word "a") = [(Word "c") ; (Word "b")]);
   assert (MarkovChain.token_list m (Word "b") = [(Word "c")]);
 
   (* Test save and load *)
