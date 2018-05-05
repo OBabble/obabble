@@ -71,7 +71,7 @@ let () =
     let query = string_to_token_list (read_line ()) in
     history := slice cHISTORY (query @ !history);
     print_string "|> ";
-    (try match model#query query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
+    (try match model#query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
     | Some response -> history := slice cHISTORY (query @ !history);
         print_endline (token_list_to_string response)
     | None -> print_endline "..."

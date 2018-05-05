@@ -8,7 +8,8 @@ let () = Random.self_init () ;;
 let cMAXTRAIN = 1000 ;;
 let cSAMPLES = 20 ;;
 let cMAXLENGTH = 15 ;;
-let cTHRESHOLD = 10. ;;
+let cTHRESHOLD = 100. ;;
+let cDELAY = 10. ;;
 let cHISTORY = 20 ;;
 
 open Token ;;
@@ -30,6 +31,7 @@ let bot_specs : bot_spec list = [
   {name = "catwoman"; corpus = "catwoman_lines.txt"};
   {name = "magneto"; corpus = "magneto_xmen.txt"};
   {name = "tinman"; corpus = "tinman_lines.txt"};
+  {name = "trump" ; corpus = "trump.txt"};
 ] ;;
 
 let model_from_spec (s : bot_spec) : Model.model =
@@ -64,15 +66,14 @@ let () =
   Printf.fprintf output "\n\n%!";
   print_endline "\n" ;;
 
-let babble_bot (bot, query, history, f, m : 
-  Model.model * token list ref * token list ref * out_channel * Mutex.t): unit =
+let babble_bot (bot, history, f, m : 
+  Model.model * token list ref * out_channel * Mutex.t): unit =
   while true do
-    Thread.delay (Random.float 10.0);
+    Thread.delay (Random.float cDELAY);
     Mutex.lock m;
-    (try match bot#query !query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
+    (try match bot#query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
     | Some response -> 
-        history := slice cHISTORY (!query @ !history);
-        query := response;
+        history := slice cHISTORY (response @ !history);
         Printf.fprintf f "\027[34;1m|\027[37m%s\027[34m|>\027[0m %s\n%!" 
           bot#name (token_list_to_string response);
     | None -> ()
@@ -82,12 +83,11 @@ let babble_bot (bot, query, history, f, m :
 
 (* Run conversation loop *)
 let () =
-  let query = ref [] in
   let history = ref [] in 
   let mutex = Mutex.create () in
   
   List.iter (fun b ->
-    ignore (Thread.create babble_bot (b, query, history, output, mutex)))  
+    ignore (Thread.create babble_bot (b, history, output, mutex)))  
   bots;
 
   print_endline "Open `tail -f output.txt` to see the conversation!";
@@ -99,8 +99,8 @@ let () =
     Printf.fprintf output "\027[31;1m|\027[37mYOU\027[31m|>\027[0m %s\n%!" line;
     let split = string_to_token_list line in
     if List.length split > 0 then
-      (query := split;
-      history := split);
+      history := split;
+      (* history := slice cHISTORY (!query @ !history)l *)
     Mutex.unlock mutex;
   done ;;
 

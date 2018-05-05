@@ -18,8 +18,7 @@ class type model_class_t =
     method load : string -> bool
     method chains : mchain
     method assocs : mchain
-    method query : token list -> token list -> int -> int -> 
-      float -> token list option
+    method query : token list -> int -> int -> float -> token list option
     method set_debug : bool -> unit
   end ;;
 
@@ -116,7 +115,7 @@ class model (name : string) : model_class_t =
     method chains = model.chains
     method assocs = model.assocs
 
-    method query (s : token list) (c : token list) 
+    method query (c : token list) 
     (n : int) (m : int) (t : float) : token list option =
       let rec repeat (n : int) (t : token) : token list =
         if n > 0 then t :: repeat (n-1) t
