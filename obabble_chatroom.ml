@@ -50,13 +50,18 @@ let bots_array = Array.of_list bots ;;
 
 let bot_converse () = () ;;
 
+let output = open_out "output.txt" ;;
+
 (* Print glorious banner *)
 let () =
   print_endline "\n\nWelcome to...";
-  let banner = open_in "obabble_art.txt" in
+  let banner = open_in "obabble_art_rich.txt" in
   (try while true do
-    print_endline (input_line banner)
+    let line = input_line banner in
+    print_endline line;
+    Printf.fprintf output "%s\n%!" line;
   done with End_of_file -> ());
+  Printf.fprintf output "\n\n%!";
   print_endline "\n" ;;
 
 let babble_bot (bot, query, history, f, m : 
@@ -68,7 +73,8 @@ let babble_bot (bot, query, history, f, m :
     | Some response -> 
         history := slice cHISTORY (!query @ !history);
         query := response;
-        Printf.fprintf f "|%s|> %s\n%!" bot#name (token_list_to_string response);
+        Printf.fprintf f "\027[34;1m|\027[37m%s\027[34m|>\027[0m %s\n%!" 
+          bot#name (token_list_to_string response);
     | None -> ()
     with Failure e -> Printf.fprintf f "|%s|> Error: Failure%s\n%!" bot#name e);
     Mutex.unlock m;
@@ -79,7 +85,6 @@ let () =
   let query = ref [] in
   let history = ref [] in 
   let mutex = Mutex.create () in
-  let output = open_out "output.txt" in
   
   List.iter (fun b ->
     ignore (Thread.create babble_bot (b, query, history, output, mutex)))  
@@ -91,7 +96,7 @@ let () =
     print_string "|: ";
     let line = read_line () in
     Mutex.lock mutex;
-    Printf.fprintf output "|YOU|> %s\n%!" line;
+    Printf.fprintf output "\027[31;1m|\027[37mYOU\027[31m|>\027[0m %s\n%!" line;
     let split = string_to_token_list line in
     if List.length split > 0 then
       (query := split;
