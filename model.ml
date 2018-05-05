@@ -1,8 +1,9 @@
-(* O[B]abble - An OCaml Chat Bot *
+(* O[B]abble - A Markov Chain Chatbot in OCaml *
  * Copyright (c) 2018 The OBabble Team
  *
- * The Learner Module --
- * Uses text streams to create a markov object
+ * The Model Class --
+ * An object to represent the chatbot, with training and
+ * generator utilities
  *)
 
 open Token ;;

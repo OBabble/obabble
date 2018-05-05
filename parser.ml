@@ -1,7 +1,7 @@
-(* O[B]abble - An OCaml Chat Bot *
+(* O[B]abble - A Markov Chain Chatbot in OCaml *
  * Copyright (c) 2018 The OBabble Team
  *
- * Parser --
+ * The Parser Module --
  * Tools for parsing and reading in training data.
  *)
 

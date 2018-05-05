@@ -1,5 +1,9 @@
-(* O[B]abble Chatroom - A Bot Chatroom for O[B]abble *)
-(* Copyright (c) 2018 The OBabble Team *)
+(* O[B]abble - A Markov Chain Chatbot in OCaml *
+ * Copyright (c) 2018 The OBabble Team
+ *
+ * The O[B]abble Chatroom --
+ * A rich and interactive multi-agent chatroom.
+ *)
 
 let debug = false ;;
 

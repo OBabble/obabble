@@ -1,5 +1,9 @@
-(* O[B]abble - A Markov Chain Chatbot in Ocaml *)
-(* Copyright (c) 2018 The OBabble Team *)
+(* O[B]abble - A Markov Chain Chatbot in OCaml *
+ * Copyright (c) 2018 The OBabble Team
+ *
+ * The Main Frame --
+ * Set up runtime resources and operate the chatbot!
+ *)
 
 let debug = false ;;
 

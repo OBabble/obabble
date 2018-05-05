@@ -1,4 +1,4 @@
-(* O[B]abble - An OCaml Chat Bot *
+(* O[B]abble - A Markov Chain Chatbot in OCaml *
  * Copyright (c) 2018 The OBabble Team
  *
  * The Markov Module --
