@@ -81,6 +81,19 @@ let babble_bot (bot, history, f, m :
     Mutex.unlock m;
   done ;;
 
+(* Handle exit *)
+let () = Sys.set_signal Sys.sigint (Signal_handle (fun _ ->
+  print_endline "";
+  let farewell = open_in "shiebs.txt" in
+  try while true do
+    let line = input_line farewell in
+    print_endline line;
+  done with End_of_file -> ();
+  print_endline ("\n\027[1m   Thank you for choosing " ^
+  "o\027[0;41;1m[B]\027[0;1mabble!   \n\027[0m");
+  exit 0)) ;;
+
+
 (* Run conversation loop *)
 let () =
   let history = ref [] in 
