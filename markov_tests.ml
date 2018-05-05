@@ -1,3 +1,10 @@
+(* O[B]abble - A Markov Chain Chatbot in OCaml *
+ * Copyright (c) 2018 The OBabble Team
+ *
+ * Markov Tests --
+ * Test MarkovChain functionality
+ *)
+
 open Token ;;
 open Markov ;;
 

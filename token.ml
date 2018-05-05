@@ -1,7 +1,7 @@
-(* O[B]abble - An OCaml Chat Bot *
+(* O[B]abble - A Markov Chain Chatbot in OCaml *
  * Copyright (c) 2018 The OBabble Team
  *
- * Token --
+ * The Token Module --
  * Definitions and tools for working with tokens.
  *)
 

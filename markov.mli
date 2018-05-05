@@ -1,3 +1,10 @@
+(* O[B]abble - A Markov Chain Chatbot in OCaml *
+ * Copyright (c) 2018 The OBabble Team
+ *
+ * The Markov Module --
+ * Definitions and tools for working with Markov Chain objects.
+ *)
+
 open Token ;;
 
 module type MARKOVCHAIN =
