@@ -9,7 +9,7 @@
 open Token ;;
 open Markov ;;
 
-type model_t = {chains : mchain; assocs : mchain}  ;;
+type model_t = {chains : mchain; assocs : mchain} ;;
 
 class type model_class_t =
   object
@@ -34,65 +34,76 @@ class model (name : string) : model_class_t =
 
     method name = name
 
-    (* Unexposed util *)  
-    method private gen (len : int) (m: mchain) (word: token) : token list  =
+    (* Unexposed util *)
+    method private gen (len : int) (m : mchain) (word : token) : token list =
       if len <= 0 then [End]
       else match MarkovChain.roll m word with
       | Some w -> (match w with
-            | End -> [End]
-            | Start
-            | Word _ -> w :: (this#gen (len-1) m w))
+                   | End -> [End]
+                   | Start
+                   | Word _ -> w :: (this#gen (len - 1) m w))
       | None -> []
 
-    (* Unexposed util *)  
-    method private score (q : token list) (ans : token list list) : (token list * float) list =
+    (* Unexposed util *)
+    method private score (q : token list)
+                         (ans : token list list)
+                       : (token list * float) list =
       let pair_relevance (t1 : token) (t2 : token) : float =
-        match MarkovChain.query this#assocs t1 t2, MarkovChain.query this#assocs t2 t1  with
+        match MarkovChain.query this#assocs t1 t2,
+              MarkovChain.query this#assocs t2 t1 with
         | Some (n1, t1), Some (n2, t2) ->
             (* Sort of like TF-IDF *)
             ((float n1) /. log (float t1) /. log (float (t2 - n2 + 1)))
-        | _ -> 0. in 
+        | _ -> 0.
+      in
       let score_answer (ans : token list) : (token list * float) =
-        if Random.float 1. < 0.0 then (ans, 0.) (* Random dropout *) 
-        else (if debug then (print_endline ""; print_endline (token_list_to_string ans));
+        if Random.float 1. < 0.0 then (ans, 0.) (* Random dropout *)
+        else (if debug
+              then (print_endline ""; print_endline (token_list_to_string ans));
         let _, raw_coherency = List.fold_left (fun (t1, acc) t2 ->
           match MarkovChain.query this#chains t1 t2 with
           | Some (n, t) -> (t2, acc +. ((float n) /. (log (float t) +. 1.)))
-          | None -> (t2, acc)) (List.hd ans, 0.) ans in
+          | None -> (t2, acc)) (List.hd ans, 0.) ans
+        in
         let coherency = raw_coherency /. (float (List.length ans)) in
         let raw_relevance = List.fold_left (fun a q_elt -> a +.
                       (List.fold_left (fun acc a_elt ->
-                        acc +. pair_relevance q_elt a_elt) 0. ans)) 0. q in
+                        acc +. pair_relevance q_elt a_elt) 0. ans)) 0. q
+        in
         let relevance = raw_relevance /. log (float ((List.length q) + 2)) in
-        if debug then 
+        if debug then
           Printf.printf "COHERENCY: %f RELEVANCE: %f\n" coherency relevance;
         let score = coherency *. relevance in
-        if debug then Printf.printf "FINAL SCORE: %f\n" score; (ans, score)) in
-      List.map score_answer ans 
+        if debug then Printf.printf "FINAL SCORE: %f\n" score; (ans, score))
+      in
+      List.map score_answer ans
 
-    (* Unexposed util *)  
-    method private stop_filter (t : token list) (stop : token list) : token list =
+    (* Unexposed util *)
+    method private stop_filter (t : token list)
+                               (stop : token list)
+                             : token list =
       List.filter (fun x -> not (List.mem x stop)) t
-
-    (*method profanity_filter *)
 
     method train (i : int) (s : token list Stream.t) : unit =
       let rec train_line (line : token list) : unit =
         match line with
-        | t1 :: t2 :: t-> 
+        | t1 :: t2 :: t ->
             MarkovChain.add model.chains t1 t2; train_line (t2 :: t)
-        | _ -> () in
+        | _ -> ()
+      in
       let train_assocs (m : mchain) (l1 : token list) (l2 : token list) =
-        List.iter (fun t1 -> List.iter (fun t2 -> MarkovChain.add m t1 t2) l2) l1
+        List.iter (fun t1 ->
+          List.iter (fun t2 -> MarkovChain.add m t1 t2) l2) l1
       in
       let counter = ref 0 in
       (try while !counter < i || i < 0 do
-        counter := !counter + 1;
-        let line = Stream.next s in
-        train_line line;
-        train_assocs model.assocs line line;
-        if !counter mod 1000 = 0 then Printf.printf "Trained %d lines...\n%!" !counter;
-      done with Stream.Failure -> print_endline "Done!");
+         counter := !counter + 1;
+         let line = Stream.next s in
+         train_line line;
+         train_assocs model.assocs line line;
+         if !counter mod 1000 = 0 then
+           Printf.printf "Trained %d lines...\n%!" !counter;
+       done with Stream.Failure -> print_endline "Done!");
       MarkovChain.bake this#chains;
       MarkovChain.bake this#assocs;
 
@@ -116,17 +127,23 @@ class model (name : string) : model_class_t =
     method chains = model.chains
     method assocs = model.assocs
 
-    method query (c : token list) 
-    (n : int) (m : int) (t : float) : token list option =
+    method query (c : token list)
+                 (n : int)
+                 (m : int)
+                 (t : float)
+               : token list option =
       let rec repeat (n : int) (t : token) : token list =
         if n > 0 then t :: repeat (n-1) t
-        else [] in
+        else []
+      in
       let seed_pool = repeat n Start in
       let candidates = List.map (fun s ->
-        s :: (this#gen m this#chains s)) seed_pool in
+        s :: (this#gen m this#chains s)) seed_pool
+      in
       let scored = this#score c candidates in
-      let best, score = List.hd 
-        (List.sort (fun (_, a) (_, b) -> compare b a) scored) in
+      let best, score = List.hd
+        (List.sort (fun (_, a) (_, b) -> compare b a) scored)
+      in
       if debug then (print_endline "\n\n\n";
       Printf.printf "(score: %f)\n" score);
       if score > t then Some best
