@@ -66,17 +66,17 @@ let () =
   Printf.fprintf output "\n\n%!";
   print_endline "\n" ;;
 
-let babble_bot (bot, history, f, m : 
+let babble_bot (bot, history, f, m :
   Model.model * token list ref * out_channel * Mutex.t): unit =
   while true do
     Thread.delay (Random.float cDELAY);
     Mutex.lock m;
     (try match bot#query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
-    | Some response -> 
-        history := slice cHISTORY (response @ !history);
-        Printf.fprintf f "\027[34;1m|\027[37m%s\027[34m|>\027[0m %s\n%!" 
-          bot#name (token_list_to_string response);
-    | None -> ()
+         | Some response ->
+             history := slice cHISTORY (response @ !history);
+             Printf.fprintf f "\027[34;1m|\027[37m%s\027[34m|>\027[0m %s\n%!"
+               bot#name (token_list_to_string response);
+         | None -> ()
     with Failure e -> Printf.fprintf f "|%s|> Error: Failure%s\n%!" bot#name e);
     Mutex.unlock m;
   done ;;
@@ -96,13 +96,11 @@ let () = Sys.set_signal Sys.sigint (Signal_handle (fun _ ->
 
 (* Run conversation loop *)
 let () =
-  let history = ref [] in 
+  let history = ref [] in
   let mutex = Mutex.create () in
-  
   List.iter (fun b ->
-    ignore (Thread.create babble_bot (b, history, output, mutex)))  
+    ignore (Thread.create babble_bot (b, history, output, mutex)))
   bots;
-
   print_endline "Open `tail -f output.txt` to see the conversation!";
   print_endline "Begin by giving input here:";
   while true do
