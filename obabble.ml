@@ -36,24 +36,24 @@ let read_lines (filename : string) : string list =
   in
   loop [] ;;
 
-let cSTOPWORDS = string_list_to_token_list (read_lines "stop.txt") ;;
+let cSTOPWORDS = string_list_to_token_list (read_lines "resources/stop.txt") ;;
 
 let model = new Model.model model_name ;;
 
 (* Initialize model *)
 let () =
   Printf.printf "Loading from saved model...\n%!";
-  if not (model#load model_name) then
+  if not (model#load ("models/" ^ model_name)) then
     (Printf.printf "Save not found.\n%!";
      print_endline "Training new model...";
-     model#train cMAXTRAIN (Parser.get_stream corpus);
-     model#save model_name)
+     model#train cMAXTRAIN (Parser.get_stream ("corpus/" ^ corpus));
+     model#save ("models/" ^ model_name))
   else Printf.printf "Model ready!%!"
 
 (* Print glorious banner *)
 let () =
   print_endline "\n\nWelcome to...";
-  let banner = open_in "obabble_art.txt" in
+  let banner = open_in "resources/obabble_art.txt" in
   (try while true do
     print_endline (input_line banner)
   done with End_of_file -> ());

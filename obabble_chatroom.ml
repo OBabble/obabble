@@ -42,11 +42,11 @@ let model_from_spec (s : bot_spec) : Model.model =
   let model = new Model.model s.name in
   Printf.printf "\nPreparing bot \"%s\"...\n%!" s.name;
   Printf.printf "Loading from saved model...\n%!";
-  (if not (model#load s.name) then
+  (if not (model#load ("models/" ^ s.name)) then
     (Printf.printf "Save not found.\n%!";
      print_endline "Training new model...";
-     model#train cMAXTRAIN (Parser.get_stream s.corpus);
-     model#save s.name)
+     model#train cMAXTRAIN (Parser.get_stream ("corpus/" ^ s.corpus));
+     model#save ("models/" ^ s.name))
   else Printf.printf "Model ready!\n%!");
   model#set_debug debug;
   model ;;
@@ -61,7 +61,7 @@ let output = open_out "output.txt" ;;
 (* Print glorious banner *)
 let () =
   print_endline "\n\nWelcome to...";
-  let banner = open_in "obabble_art_rich.txt" in
+  let banner = open_in "resources/obabble_art_rich.txt" in
   (try while true do
     let line = input_line banner in
     print_endline line;
@@ -88,7 +88,7 @@ let babble_bot (bot, history, f, m :
 (* Handle exit *)
 let () = Sys.set_signal Sys.sigint (Signal_handle (fun _ ->
   print_endline "";
-  let farewell = open_in "shiebs.txt" in
+  let farewell = open_in "corpus/shiebs.txt" in
   try while true do
     let line = input_line farewell in
     print_endline line;

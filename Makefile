@@ -11,4 +11,4 @@ clean:
 	rm -rf _build *.byte
 
 purge: clean
-	rm ./*.om*
+	rm  models/*
