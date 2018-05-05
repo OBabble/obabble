@@ -28,7 +28,8 @@ let read_lines (filename : string) : string list =
   let rec loop (acc : string list) : string list =
     match try_read () with
     | Some s -> loop (s :: acc)
-    | None -> close_in ic; List.rev acc in
+    | None -> close_in ic; List.rev acc
+  in
   loop [] ;;
 
 let cSTOPWORDS = string_list_to_token_list (read_lines "stop.txt") ;;
@@ -58,13 +59,13 @@ let () =
 let rec slice (n : int) (l : 'a list) : 'a list =
   if n <= 0 then []
   else match l with
-  | h :: t -> h :: slice (n-1) t
-  | _ -> [] ;;
+       | h :: t -> h :: slice (n-1) t
+       | _ -> [] ;;
 
 (* Run conversation loop *)
 let () =
   model#set_debug debug;
-  let history = ref [] in 
+  let history = ref [] in
   print_endline "Begin a conversation:";
   while true do
     print_string "|: ";
@@ -72,9 +73,9 @@ let () =
     history := slice cHISTORY (query @ !history);
     print_string "|> ";
     (try match model#query !history cSAMPLES cMAXLENGTH cTHRESHOLD with
-    | Some response -> history := slice cHISTORY (query @ !history);
-        print_endline (token_list_to_string response)
-    | None -> print_endline "..."
+         | Some response -> history := slice cHISTORY (query @ !history);
+                            print_endline (token_list_to_string response)
+         | None -> print_endline "..."
     with Failure _ -> print_endline "...");
     print_endline "";
   done ;;
