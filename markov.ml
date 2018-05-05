@@ -10,7 +10,6 @@ open Token ;;
 let cSTARTREPR = "|START|" ;;
 let cENDREPR = "|END|" ;;
 
-
 module type MARKOVCHAIN =
   sig
     exception BadChain of string
@@ -34,10 +33,20 @@ module MarkovChain : MARKOVCHAIN =
     exception BadChain of string
     exception RollWithoutBake
 
+    (* Token Tree Data Structure:
+     * When we roll to get random tokens from our Markov Chain, we would like
+     * to get them weighed exactly by probability. Folding across the chain
+     * takes O(n) time, which is slow. Sampling an array and testing
+     * probabilities is a fast O(1) time, but not accurate (especially when
+     * our chain gets sparse). This tree presents a good balance, giving
+     * fully-correct probabibalistic weightings in O(logn) time.
+     *)
+
     type token_tree = 
       | Node of ((token * int * int) * token_tree * token_tree) 
       | Leaf
 
+    (* Find a token by index roll in O(logn) time. *)
     let rec tree_find (t : token_tree) (i : int) : token =
       match t with 
       | Node ((t, s, e), l, r) -> if i >= s && i < e then t
@@ -45,6 +54,7 @@ module MarkovChain : MARKOVCHAIN =
                                   else tree_find r i
       | Leaf -> raise Not_found 
 
+    (* Build a balanaced binary search tree for fast token rolls *)
     let rec tree_build (a : (token * int * int) array) : token_tree = 
       match a with
       | [| |] -> Leaf
@@ -89,7 +99,8 @@ module MarkovChain : MARKOVCHAIN =
        | None -> Hashtbl.add m.totals s1 n)
 
     let add = add_n 1
-    
+   
+    (* A private utility for getting a list of tokens with position data *) 
     let augmented_token_list (m : mchain) (t : token) : (token * int * int) list =
       let _, h = Hashtbl.find m.chain t in
       let _, l = Hashtbl.fold 
@@ -101,8 +112,8 @@ module MarkovChain : MARKOVCHAIN =
     let token_totals (m : mchain) (t : token) : int =
       Hashtbl.find m.totals t
 
-    (* Bake computes token index arrays for efficient roll. Must be called
-     * before performing rolls otherwise roll will always fail. *)
+    (* Bake computes the token tree used in efficient roll. 
+     * Must be called before performing rolls otherwise roll will fail. *)
     let bake (m : mchain) : unit = 
       if not m.baked then (Printf.printf "Baking...%!"; 
         Hashtbl.iter (fun t (_, h) ->
@@ -116,9 +127,9 @@ module MarkovChain : MARKOVCHAIN =
         Some (Hashtbl.find h t2, token_totals m t1)
       with Not_found -> None
 
-    (* Try to pick a word randomly for `n` attempts. If no word is chosen by
-     * then, then just pick a random word.
-     *)
+    (* Given seedtoken `s`, pick a word to follow `s` with random probability,
+     * weighted by observed frequiencies. Guaranteed to return a result of a
+     * pairing exists in the Markov Chain; will return None otherwise. *)
     let roll (m : mchain) (s : token) : token option =
       if not m.baked then raise RollWithoutBake
       else try let tt, _ = Hashtbl.find m.chain s in         
@@ -130,6 +141,7 @@ module MarkovChain : MARKOVCHAIN =
       (Hashtbl.length m.totals,
         Hashtbl.fold (fun t _ acc -> acc + token_totals m t) m.totals 0)
 
+    (* Save Markov Chain to file *)
     let save (m : mchain) (p : string) : unit =
       let f = open_out p in
       let c_ex, t_ex = size m in Printf.fprintf f "%d %d\n" c_ex t_ex;
@@ -142,7 +154,8 @@ module MarkovChain : MARKOVCHAIN =
         | End -> cENDREPR
         | Start -> cSTARTREPR
         | Word s -> s in
-        Printf.fprintf f "%s %d\n" s n; cb s in
+        Printf.fprintf f "%s %d\n" s n; cb s
+      in
       Hashtbl.iter (fun t1 c -> 
         write_token t1 c 0 (fun s ->
           match Hashtbl.find_opt m.chain t1 with
@@ -153,7 +166,7 @@ module MarkovChain : MARKOVCHAIN =
       Printf.printf "Saved %d tokens totaling %d instances.\n" c_ex t_ex;
       close_out f
 
-    (* TODO: CLEAN UP THIS CODE! *)
+    (* Load Markov Chain from file *)
     let load (p : string) : mchain =
       let m = empty () in
       let f = open_in p in
@@ -168,7 +181,6 @@ module MarkovChain : MARKOVCHAIN =
             else if s = cSTARTREPR then Start, n
             else Word s, n) in
         try
-          (* TODO: Yuck *)
           if l = 1 then Scanf.sscanf s "\t%s %d" process
           else Scanf.sscanf s "%s %d" process
         with
@@ -206,9 +218,6 @@ module MarkovChain : MARKOVCHAIN =
               ((float !loaded) /. (float c_ex) *. 100.);
           scan_total () in
         scan_total (); m 
-        (* TODO: This structure is weird; this m will never be
-         * reached. Rewrite to test if file is EOF rather than using neat pythonic
-         * exception-handling behavior *)
       with End_of_file -> if !read <> !expected then
         raise (BadChain "EOF while expecting more chain data")
       else (Printf.printf "\rLoaded %d tokens (100.00%%)\n%!" !loaded; bake m; m)
